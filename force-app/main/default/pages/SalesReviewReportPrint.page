@@ -1,0 +1,1139 @@
+<apex:page controller="SalesReviewReportController" readOnly="true" contentType="application/vnd.ms-excel#SalesForecast-{!userMap[strSelectedRep].Name}-{!TODAY()}.xls" standardStylesheets="false" cache="true" language="en-US" sidebar="false" showHeader="false">
+<!--<apex:page controller="SalesReviewReportController" readOnly="true"  standardStylesheets="false" cache="true" language="en-US" sidebar="false" showHeader="false">-->
+
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />    
+
+    <h1 class="pageType noSecondHeader">One on One</h1>
+    
+    <style>
+        table{
+           border-collapse: collapse!important;
+        }
+
+        table th{
+            background-color:#f2f3f3;
+            border: 1px solid black;
+            text-align: left;
+        }
+
+        table td{
+            border: 1px solid black;
+            text-align: right;
+        }
+
+        table th.noborder, table td.noborder{
+            border:none !important;
+        }
+
+        .h3HeadCol{
+            background-color:#cfeef8;
+        }
+
+        .summaryHeading, .summaryData{
+            font-size: 14px;
+        } 
+
+        th.dealNameWidth{
+            width:350px !important;
+        }
+    </style>
+        <table>
+            <tr>
+                <th class="summaryHeading">Rep Name:</th>
+                <td class="summaryData">
+                    {!userMap[strSelectedRep].Name}
+                </td>
+                <th class="summaryHeading">Year:</th>
+                <td class="summaryData">
+                    {!strSelectedYear}
+                </td>
+                <th class="summaryHeading">Quarter:</th>
+                <td class="summaryData">
+                    {!strSelectedQuarter}
+                </td>
+                <th class="summaryHeading">Show:</th>
+                <td class="summaryData">
+                    {!If(strSelectedMyOrMyTeamData == '1', 'My Data', 'My Team\'s Data')}
+                </td>
+                <apex:outputPanel layout="none" rendered="{!currentUserSalesTeam != null && currentUserSalesTeam == 'All' && selectedRepSalesTeam != 'All'}">
+                    <th class="summaryHeading">Sales Team:</th>
+                    <td class="summaryData">
+                        Q{!selectedRepSalesTeam}
+                    </td>
+                </apex:outputPanel>
+            </tr>
+        </table>
+        <br/>
+       
+            <!--Sales Quota Report-->
+            <apex:outputPanel >
+                <table>
+                    <tr>
+                        <th>Type</th>
+                        <th>Annual Quota</th>
+
+                        <th>Annual Prorated Quota</th>
+
+                        <th>YTD Won</th>
+                        <th>YTD Quota (%)</th>
+
+                        <th>Quarterly Quota</th>
+
+                        <th>Quarterly Won</th>
+                        <th>Quarterly Won Percent (%)</th>
+
+                        <th>Quarterly Pipeline</th>
+                        <th>Quarterly Pipeline Percent (%)</th>
+                        
+                        <th>This Years Pipeline</th>
+                       
+                    </tr>
+
+                    <apex:repeat value="{!lstWrapperSalesReport}" var="result">
+                        <tr>
+                            <td>{!result.dealType}</td>
+                            <td>${!result.annualQuotas}</td>
+
+                            <td>${!result.annualProrated}</td>
+
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="${!result.ytdWon}" />
+                            </td>
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />      
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="{!if(result.ytdWonPercent>0,TEXT(result.ytdWonPercent) + '%','0%')}" />
+                            </td>
+
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="${!result.quartlyQuotas}" />
+                            </td>
+
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="${!result.quartlyWon}" />                           
+                            </td>
+
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="{!if(result.quartlyWonPercent>0,TEXT(result.quartlyWonPercent) + '%','0%')}" />             
+                            </td>
+
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="${!result.quartlySales}" />                         
+                            </td>
+
+
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="{!if(result.quartlySalesPercent>0,TEXT(result.quartlySalesPercent) + '%','0%')}" />  
+                            </td>
+                            
+                            <td>
+                                <apex:outputText rendered="{!if(result.dealType=='Annual Prorated Quota',true,false)}" value="" />
+                                <apex:outputText rendered="{!if(result.dealType!='Annual Prorated Quota',true,false)}" value="${!result.ytdSales}" />  
+                            </td>                            
+                        </tr>
+                    </apex:repeat>
+                </table>
+            </apex:outputPanel>
+
+            <br/>
+
+            <table >
+                <tr>
+                    <th colspan="10" align="left" class="h3HeadCol" >
+                        <h3>Sales Quota's Detail (Rolling 12 Months)</h3>
+                    </th>
+                </tr>
+                 <tr>
+                    <th>&nbsp;</th>
+                    <td>
+                        &nbsp;
+                    </td>
+                    <th>Customer Win/Loss</th>
+                    <td>
+                        &nbsp;
+                    </td>
+                    <th>Customer Monthly Win/Loss</th>
+                    <td>
+                        &nbsp;
+                    </td>
+                    <th>ZBO Win/Loss</th>
+                    <td>
+                        &nbsp;
+                    </td>
+                    <th>ZBO Monthly Win/Loss</th>
+                    <td>
+                        &nbsp;
+                    </td>
+
+
+                    
+                </tr>
+                <tr>
+                    <th>BEQI</th>
+                    <td>
+                        <apex:outputText rendered="{!objSalesQuote.BEQI__c!=null}" value="${!objSalesQuote.BEQI__c}" />
+                    </td>
+
+                    <th>YTD Win %</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryRep.winPercent!=null}" value="{!if(currentSummaryRep.winPercent>0,TEXT(currentSummaryRep.winPercent) + '%','0%')}" />
+                    </td>
+
+                    <th>Avg Monthly Win %</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryRep.winPercent!=null}" value="{!if(monthlySummaryRep.winPercent>0,TEXT(monthlySummaryRep.winPercent) + '%','0%')}" />
+                    </td>
+
+                    <th>YTD Win %</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryZbo.winPercent!=null}" value="{!if(currentSummaryZbo.winPercent>0,TEXT(currentSummaryZbo.winPercent) + '%','0%')}" />
+                    </td>
+
+                    <th>Avg Monthly Win %</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryZbo.winPercent!=null}" value="{!if(monthlySummaryZbo.winPercent>0,TEXT(monthlySummaryZbo.winPercent) + '%','0%')}" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Market Share%</th>
+                    <td>
+                        <apex:outputText rendered="{!objSalesQuote.Market_Share__c!=null}" value="{!objSalesQuote.Market_Share__c}%" />
+                    </td>
+
+                    <th>YTD Won</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryRep.totalWon!=null}" value="{!currentSummaryRep.totalWon}" />
+                    </td>
+
+                    <th>Avg Monthly Won</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryRep.totalWon!=null}" value="{!monthlySummaryRep.totalWon}" />
+                    </td>
+
+                    <th>YTD Won</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryZbo.totalWon!=null}" value="{!currentSummaryZbo.totalWon}" />
+                    </td>
+
+                    <th>Avg Monthly Won</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryZbo.totalWon!=null}" value="{!monthlySummaryZbo.totalWon}" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>EDA Opportunity</th>
+                    <td>
+                        <apex:outputText rendered="{!objSalesQuote.EDA_Opportunity__c!=null}" value="${!objSalesQuote.EDA_Opportunity__c}" />
+                    </td>
+
+                    <th>YTD Pushed</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryRep.totalLost!=null}" value="{!currentSummaryRep.totalLost}" />
+                    </td>
+
+                    <th>Avg Monthly Pushed</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryRep.totalLost!=null}" value="{!monthlySummaryRep.totalLost}" />
+                    </td>
+
+                    <th>YTD Pushed</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryZbo.totalLost!=null}" value="{!currentSummaryZbo.totalLost}" />
+                    </td>
+
+                    <th>Avg Monthly Pushed</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryZbo.totalLost!=null}" value="{!monthlySummaryZbo.totalLost}" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>FM Audit Hdwr $</th>
+                    <td>
+                        <apex:outputText rendered="{!objSalesQuote.FM_Audit_Hdwr__c!=null}" value="${!objSalesQuote.FM_Audit_Hdwr__c}" />
+                    </td>
+
+                    <th>YTD Lost to Competition</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryRep.totalLostToComp!=null}" value="{!currentSummaryRep.totalLostToComp}" />
+                    </td>
+
+                    <th>Avg Monthly Lost to Competition</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryRep.totalLostToComp!=null}" value="{!monthlySummaryRep.totalLostToComp}" />
+                    </td>
+
+                    <th>YTD Lost to Competition</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryZbo.totalLostToComp!=null}" value="{!currentSummaryZbo.totalLostToComp}" />
+                    </td>
+
+                    <th>Avg Monthly Lost to Competition</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryZbo.totalLostToComp!=null}" value="{!monthlySummaryZbo.totalLostToComp}" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>FM Audit Svc $</th>
+                    <td>
+                        <apex:outputText rendered="{!objSalesQuote.FM_Audit_Svc__c!=null}" value="${!objSalesQuote.FM_Audit_Svc__c}" />
+                    </td>
+
+                    <th>YTD Deals Worked</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryRep.totalCount!=null}" value="{!currentSummaryRep.totalCount}" />
+                    </td>
+
+                    <th>Avg Monthly Deals Worked</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryRep.totalCount!=null}" value="{!monthlySummaryRep.totalCount}" />
+                    </td>
+
+                    <th>YTD Deals Worked</th>
+                    <td>
+                        <apex:outputText rendered="{!currentSummaryZbo.totalCount!=null}" value="{!currentSummaryZbo.totalCount}" />
+                    </td>
+
+                    <th>Avg Monthly Deals Worked</th>
+                    <td>
+                        <apex:outputText rendered="{!monthlySummaryZbo.totalCount!=null}" value="{!monthlySummaryZbo.totalCount}" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>FM Audit Printer$</th>
+                    <td>
+                        <apex:outputText rendered="{!objSalesQuote.FM_Audit_Printer__c!=null}" value="${!objSalesQuote.FM_Audit_Printer__c}" />
+                    </td>
+
+                    <th>Total Deals Worked</th>
+                    <td>
+                        <apex:outputText value="{!currentSummaryZbo.totalCount + currentSummaryRep.totalCount}" />
+                    </td>
+
+                     <th>Total Avg Monthly Deals</th>
+                    <td>
+                        <apex:outputText value="{!monthlySummaryZbo.totalCount + monthlySummaryRep.totalCount}" />
+                    </td>
+                </tr>     
+            </table>
+
+        <!--Rep Forecast -->        
+        <h2 class="mainTitle">Monthly Rep Forecast (Current month)</h2>           
+        <apex:outputPanel rendered="{!lstResultRepForcast != null && lstResultRepForcast.size > 0}">
+            <table>
+                <tr>
+                    <th class="dealNameWidth">Rep Name</th>
+                    <th>Type</th>
+                    <th>New Placement / Replacement</th>
+                    <th>Revenue</th>
+                    <th>Deal Name</th>
+                    <th>Age</th>
+                    <th>Deal Activity Monitor</th>
+                    <th>Sales Stage</th>
+                    <th>Is Proposal Done?</th>
+                    <th>Next Steps</th>
+                    <th>Automated Forecast Revenue</th>
+                </tr>
+
+                <apex:repeat value="{!lstResultRepForcast}" var="result">
+                    <tr>
+                        <td>{!result.OwnerName}</td>
+                        <td>{!result.objDeal.RecordType.Name}</td>
+                        <td>{!result.newplacementreplacement}</td>
+                        <td>{!If(result.revenue != '','$' + result.revenue,'')}</td>
+                        <td>{!result.objDeal.Name}</td>
+                        <td>{!result.objDeal.TSGADX__Agedays__c}</td>
+                        <td>{!result.objDeal.Deal_Activity_Monitor_Color__c}</td>
+                        <td>{!result.objDeal.TSGADX__Sales_Stage__c}</td>
+                        <td>${!result.proposalDone}</td>
+                        <td>{!result.objDeal.Next_Steps__c}</td>
+                        <td>${!result.automatedForcastPercent}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </apex:outputPanel>
+
+        <!--Manager  Forecast -->        
+        <h2 class="mainTitle">Monthly Manager Forecast (Current month)</h2>           
+        <apex:outputPanel rendered="{!lstResultManagerForcast != null && lstResultManagerForcast.size > 0}">
+            <table>
+                <tr>
+                    <th class="dealNameWidth">Rep Name</th>
+                    <th>Type</th>
+                    <th>New Placement / Replacement</th>
+                    <th>Revenue</th>
+                    <th>Deal Name</th>
+                    <th>Age</th>
+                    <th>Deal Activity Monitor</th>
+                    <th>Sales Stage</th>
+                    <th>Is Proposal Done?</th>
+                    <th>Next Steps</th>
+                    <th>Automated Forecast Revenue</th>
+                </tr>
+
+                <apex:repeat value="{!lstResultManagerForcast}" var="result">
+                    <tr>
+                        <td>{!result.OwnerName}</td>
+                        <td>{!result.objDeal.RecordType.Name}</td>
+                        <td>{!result.newplacementreplacement}</td>
+                        <td>{!If(result.revenue != '','$' + result.revenue,'')}</td>
+                        <td>{!result.objDeal.Name}</td>
+                        <td>{!result.objDeal.TSGADX__Agedays__c}</td>
+                        <td>{!result.objDeal.Deal_Activity_Monitor_Color__c}</td>
+                        <td>{!result.objDeal.TSGADX__Sales_Stage__c}</td>
+                        <td>${!result.proposalDone}</td>
+                        <td>{!result.objDeal.Next_Steps__c}</td>
+                        <td>${!result.automatedForcastPercent}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </apex:outputPanel>
+
+        <!--VP  Forecast -->        
+        <h2 class="mainTitle">Monthly VP Forecast (Current month)</h2>           
+        <apex:outputPanel rendered="{!lstResultVPForcast != null && lstResultVPForcast.size > 0}">
+            <table>
+                <tr>
+                    <th class="dealNameWidth">Rep Name</th>
+                    <th>Type</th>
+                    <th>New Placement / Replacement</th>
+                    <th>Revenue</th>
+                    <th>Deal Name</th>
+                    <th>Age</th>
+                    <th>Deal Activity Monitor</th>
+                    <th>Sales Stage</th>
+                    <th>Is Proposal Done?</th>
+                    <th>Next Steps</th>
+                    <th>Automated Forecast Revenue</th>
+                </tr>
+
+                <apex:repeat value="{!lstResultVPForcast}" var="result">
+                    <tr>
+                        <td>{!result.OwnerName}</td>
+                        <td>{!result.objDeal.RecordType.Name}</td>
+                        <td>{!result.newplacementreplacement}</td>
+                        <td>{!If(result.revenue != '','$' + result.revenue,'')}</td>
+                        <td>{!result.objDeal.Name}</td>
+                        <td>{!result.objDeal.TSGADX__Agedays__c}</td>
+                        <td>{!result.objDeal.Deal_Activity_Monitor_Color__c}</td>
+                        <td>{!result.objDeal.TSGADX__Sales_Stage__c}</td>
+                        <td>${!result.proposalDone}</td>
+                        <td>{!result.objDeal.Next_Steps__c}</td>
+                        <td>${!result.automatedForcastPercent}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </apex:outputPanel>
+
+        <!--Pipeline  Forecast -->        
+        <h2 class="mainTitle">Pipeline Forecast (Current date to next 5 years)</h2>           
+        <apex:outputPanel rendered="{!lstResultPipelineForecast != null && lstResultPipelineForecast.size > 0}">
+            <table>
+                <tr>
+                    <th class="dealNameWidth">Color</th>
+                    <th>0-30 Days DV</th>
+                    <th>31-90 Days DV</th>
+                    <th>91-180 Days DV</th>
+                    <th>181-365 Days DV</th>
+                    <th>365-730 Days DV</th>
+                    <th>731-1095 Days DV</th>
+                    <th>1096-1460 Days DV</th>
+                    <th>1461-1825 Days DV</th>
+                </tr>
+
+                <apex:repeat value="{!lstResultPipelineForecast}" var="result">
+                    <tr>
+                        <td>{!result.color}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue0,'$' + result.strrevenue0)}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue30,'$' + result.strrevenue30)}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue91,'$' + result.strrevenue91)}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue181,'$' + result.strrevenue181)}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue365,'$' + result.strrevenue365)}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue731,'$' + result.strrevenue731)}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue1096,'$' + result.strrevenue1096)}</td>
+                        <td>{!If(result.color == 'Total # of Deals',result.strrevenue1461,'$' + result.strrevenue1461)}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </apex:outputPanel>
+
+        <!--Activity Details  Forecast -->        
+        <h2 class="mainTitle">Activity Details Forecast (Last month to next 5 years)</h2>           
+        <apex:outputPanel rendered="{!lstwftrackingActivity != null && lstwftrackingActivity.size > 0}">
+            <table>
+                <tr>
+                    <th>Appointments Last Week</th>
+                    <th>Appointments This Week</th>
+                    <th>Proposals Last Week</th>
+                    <th>Proposals This Week</th>
+                    <th>BTR's Last Week</th>
+                    <th>BTR's This Week</th>
+                </tr>
+                <apex:repeat value="{!lstwftrackingActivity}" var="result">
+                    <tr>
+                        <td>{!result.appointmentlastweek}</td>
+                        <td>{!result.appointmentthisweek}</td>
+                        <td>{!result.Proposalslastweek}</td>
+                        <td>{!result.Proposalsthisweek}</td>
+                        <td>{!result.BTRlastweek}</td>
+                        <td>{!result.BTRthisweek}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+            <table>
+                <tr>
+                    <th>Appointments Last Month</th>
+                    <th>Appointments This Month</th>
+                    <th>Proposals Last Month</th>
+                    <th>Proposals This Month</th>
+                    <th>BTR's Last Month</th>
+                    <th>BTR's This Month</th>
+                </tr>
+                <apex:repeat value="{!lstwftrackingActivity}" var="result">
+                    <tr>
+                        <td>{!result.appointmentlastmonth}</td>
+                        <td>{!result.appointmentthismonth}</td>
+                        <td>{!result.Proposalslastmonth}</td>
+                        <td>{!result.Proposalsthismonth}</td>
+                        <td>{!result.BTRlastmonth}</td>
+                        <td>{!result.BTRthismonth}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+            <table>
+                <tr>
+                    <th>Tasks Last Week</th>
+                    <th>Tasks This Week</th>
+                    <th>Tasks This Month</th>
+                    <th>Tasks 61-180</th>
+                    <th>Tasks 181-365</th>
+                    <th>Tasks Year 2</th>
+                    <th>Tasks Year 3</th>
+                    <th>Tasks Year 4</th>
+                    <th>Tasks Year 5</th>
+                </tr>
+                <apex:repeat value="{!lstwftrackingActivity}" var="result">
+                    <tr>
+                        <td>{!result.tasklastweek}</td>
+                        <td>{!result.taskthisweek}</td>
+                        <td>{!result.taskthismonth}</td>
+                        <td>{!result.task61}</td>
+                        <td>{!result.task181}</td>
+                        <td>{!result.task2year}</td>
+                        <td>{!result.task3year}</td>
+                        <td>{!result.task4year}</td>
+                        <td>{!result.task5year}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </apex:outputPanel>
+
+            <!--Top 10 Gap Closers -->
+        
+            <h2 class="mainTitle">Top 10 Gap Closers (Current calendar year)</h2>
+           <table>
+                <tr>
+                    <th class="summaryHeading">Open Revenue</th>
+                    <td class="summaryData">${!gapCloseOpenRev}</td>
+                </tr>
+            </table>
+            <br/> 
+
+            <apex:outputPanel rendered="{!lstResultTop10Closers != null && lstResultTop10Closers.size > 0}">
+                <table>
+                    <tr>
+                        <th class="dealNameWidth">Deal Name</th>
+                        <th>Revenue</th>
+                        <th>Proposal (Y/N)</th>
+                        <th>Closing Month</th>
+                        <th>Type</th>
+                        <th>Next Activity</th>
+                    </tr>
+
+                    <apex:repeat value="{!lstResultTop10Closers}" var="result">
+                        <tr>
+                            <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                            <td>${!result.revenue}</td>
+                            <td>{!if(result.proposal,'Y','N')}</td>
+                            <td>{!result.closingmonth}</td>
+                            <td>{!result.objDeal.TSGADX__Type__c}</td>
+                            <td>{!result.objDeal.Next_Steps__c}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+            </apex:outputPanel>
+            
+        <!--Top 10 ZBO -->
+        <h2 class="mainTitle">Top 10 ZBO's (Current calendar year)</h2>
+            <table>
+                <tr>
+                    
+                    <th class="summaryHeading">Open Revenue</th>
+                    <td class="summaryData">${!zboOpenRev}</td>
+
+                    <th class="summaryHeading">Win %</th>
+                    <td class="summaryData">{!zboSummary.winPercent}</td>
+
+                    <th class="summaryHeading">Won</th>
+                    <td class="summaryData">{!zboSummary.totalWon}</td>
+
+                    <th class="summaryHeading">Lost</th>
+                    <td class="summaryData">{!zboSummary.totalLost}</td>
+
+                    <th class="summaryHeading">Lost to Competition</th>
+                    <td class="summaryData">{!zboSummary.totalLostToComp}</td>
+                </tr>
+            </table>
+            <br/>
+            <table width="100%">
+                <tr>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="6">
+                        <b>Open Deals</b>
+                    </th>
+                    <td class="noborder"/>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="4">
+                        <b>Closed Deals</b>
+                    </th>
+                </tr>
+                <tr>
+                    <td style="vertical-align:top;" colspan="6">
+                        <apex:outputPanel rendered="{!lstResultTop10ZBOOpenDeals != null && lstResultTop10ZBOOpenDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <th>Proposal (Y/N)</th>
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <th>Next Activity</th>
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10ZBOOpenDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <td>{!if(result.proposal,'Y','N')}</td>
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <td>{!result.objDeal.Next_Steps__c}</td>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                    <td class="noborder"/>
+                    <td style="vertical-align:top;" colspan="4">
+                        <apex:outputPanel rendered="{!lstResultTop10ZBOClosedDeals != null && lstResultTop10ZBOClosedDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <!--<th>Proposal (Y/N)</th>-->
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <!--<th>Next Activity</th>-->
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10ZBOClosedDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <!--<td>{!if(result.proposal,'Y','N')}</td>-->
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <!--<td>{!result.objDeal.Next_Steps__c}</td>-->
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                </tr>
+            </table>
+        
+        
+        <!--Top 10 Production Deal-->
+        <h2 class="mainTitle">Top 10 Production Deals (Current calendar year)</h2>
+            
+            <table>
+                <tr>
+                    
+                    <th class="summaryHeading">Open Revenue</th>
+                    <td class="summaryData">${!prodOpenRev}</td>
+
+                    <th class="summaryHeading">Win %</th> 
+                    <td class="summaryData">{!productionSummary.winPercent}</td>
+
+                    <th class="summaryHeading">Won</th>
+                    <td class="summaryData">{!productionSummary.totalWon}</td>
+
+                    <th class="summaryHeading">Lost</th>
+                    <td class="summaryData">{!productionSummary.totalLost}</td>
+
+                    <th class="summaryHeading">Lost to Competition</th>
+                    <td class="summaryData">{!productionSummary.totalLostToComp}</td>
+                </tr>
+            </table>
+            <br/>
+
+
+            <table width="100%">
+                <tr>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="6">
+                        <b>Open Deals</b>
+                    </th>
+                    <td class="noborder"/>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="4">
+                        <b>Closed Deals</b>
+                    </th>
+                </tr>
+                <tr>
+                    <td style="vertical-align:top;" colspan="6">
+                        <apex:outputPanel rendered="{!lstResultTop10ProductionOpenDeals != null && lstResultTop10ProductionOpenDeals.size > 0}" >
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <th>Proposal (Y/N)</th>
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <th>Next Activity</th>
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10ProductionOpenDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <td>{!if(result.proposal,'Y','N')}</td>
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <td>{!result.objDeal.Next_Steps__c}</td>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                    <td class="noborder"/>
+                    <td style="vertical-align:top;" colspan="4">
+                        <apex:outputPanel rendered="{!lstResultTop10ProductionClosedDeals != null && lstResultTop10ProductionClosedDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <!--<th>Proposal (Y/N)</th>-->
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <!--<th>Next Activity</th>-->
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10ProductionClosedDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <!--<td>{!if(result.proposal,'Y','N')}</td>-->
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <!--<td>{!result.objDeal.Next_Steps__c}</td>-->
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                </tr>
+            </table>
+        
+        
+        
+        <!--Top 10 Production Deal-->
+        <h2 class="mainTitle">Top 10 Software Deals (Current calendar year)</h2>
+            
+            <table>
+                <tr>
+                    
+                    <th class="summaryHeading">Open Revenue</th>
+                    <td class="summaryData">${!itServOpenRev}</td>
+
+                    <th class="summaryHeading">Win %</th>
+                    <td class="summaryData">{!itServicesSummary.winPercent}</td>
+
+                    <th class="summaryHeading">Won</th>
+                    <td class="summaryData">{!itServicesSummary.totalWon}</td>
+
+                    <th class="summaryHeading">Lost</th>
+                    <td class="summaryData">{!itServicesSummary.totalLost}</td>
+
+                    <th class="summaryHeading">Lost to Competition</th>
+                    <td class="summaryData">{!itServicesSummary.totalLostToComp}</td>
+                </tr>
+            </table>
+            <br/>
+
+            <table width="100%">
+                <tr>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="6">
+                        <b>Open Deals</b>
+                    </th>
+                    <td class="noborder"/>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="4">
+                        <b>Closed Deals</b>
+                    </th>
+                </tr>
+                <tr>
+                    <td style="vertical-align:top;" class="summaryHeading" colspan="6">
+                        <apex:outputPanel rendered="{!lstResultTop10ITOpenDeals != null && lstResultTop10ITOpenDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <th>Proposal (Y/N)</th>
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <th>Next Activity</th>
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10ITOpenDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <td>{!if(result.proposal,'Y','N')}</td>
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <td>{!result.objDeal.Next_Steps__c}</td>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                    <td class="noborder"/>
+                    <td style="vertical-align:top;" class="summaryHeading" colspan="4">
+                        <apex:outputPanel rendered="{!lstResultTop10ITClosedDeals != null && lstResultTop10ITClosedDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <!--<th>Proposal (Y/N)</th>-->
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <!--<th>Next Activity</th>-->
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10ITClosedDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <!--<td>{!if(result.proposal,'Y','N')}</td>-->
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <!--<td>{!result.objDeal.Next_Steps__c}</td>-->
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                </tr>
+            </table>
+        
+        
+        <!--Top 10 Equipments Deal-->
+        <h2 class="mainTitle">Top 10 Equipment Deals (Current calendar year)</h2>
+            
+            <table>
+                <tr>
+                    
+                    <th class="summaryHeading">Open Revenue</th>
+                    <td class="summaryData">${!eqipOpenRev}</td>
+
+                    <th class="summaryHeading">Win %</th>
+                    <td class="summaryData">{!equipmentSummary.winPercent}</td>
+
+                    <th class="summaryHeading">Won</th>
+                    <td class="summaryData">{!equipmentSummary.totalWon}</td>
+
+                    <th class="summaryHeading">Lost</th>
+                    <td class="summaryData">{!equipmentSummary.totalLost}</td>
+
+                    <th class="summaryHeading">Lost to Competition</th>
+                    <td class="summaryData">{!equipmentSummary.totalLostToComp}</td>
+                </tr>
+            </table>
+            <br/>
+
+            <table width="100%">
+                <tr>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="6">
+                        <b>Open Deals</b>
+                    </th>
+                    <td class="noborder"/>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="4">
+                        <b>Closed Deals</b>
+                    </th>
+                </tr>
+                <tr>
+                    <td style="vertical-align:top;" colspan="6">
+                        <apex:outputPanel rendered="{!lstResultTop10EquipmentsOpenDeals != null && lstResultTop10EquipmentsOpenDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <th>Proposal (Y/N)</th>
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <th>Next Activity</th>
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10EquipmentsOpenDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <td>{!if(result.proposal,'Y','N')}</td>
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <td>{!result.objDeal.Next_Steps__c}</td>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                    <td class="noborder"/>
+                    <td style="vertical-align:top;" colspan="4">
+                        <apex:outputPanel rendered="{!lstResultTop10EquipmentsClosedDeals != null && lstResultTop10EquipmentsClosedDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <!--<th>Proposal (Y/N)</th>-->
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <!--<th>Next Activity</th>-->
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10EquipmentsClosedDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <!--<td>{!if(result.proposal,'Y','N')}</td>-->
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <!--<td>{!result.objDeal.Next_Steps__c}</td>-->
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                </tr>
+            </table>
+       
+        
+        <!--Top 10 MPS Deal-->
+        <h2 class="mainTitle">Top 10 MPS Deals (Current calendar year)</h2>
+            
+            <table>
+                <tr>
+                    
+                    <th class="summaryHeading">Open Revenue</th>
+                    <td class="summaryData">${!mpsOpenRev}</td>
+
+                    <th class="summaryHeading">Win %</th>
+                    <td class="summaryData">{!mpsSummary.winPercent}</td>
+
+                    <th class="summaryHeading">Won</th>
+                    <td class="summaryData">{!mpsSummary.totalWon}</td>
+
+                    <th class="summaryHeading">Lost</th>
+                    <td class="summaryData">{!mpsSummary.totalLost}</td>
+
+                    <th class="summaryHeading">Lost to Competition</th>
+                    <td class="summaryData">{!mpsSummary.totalLostToComp}</td>
+                </tr>
+            </table>
+            <br/>
+
+            <table width="100%">
+                <tr>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="6">
+                        <b>Open Deals</b>
+                    </th>
+                    <td class="noborder"/>
+                    <th width="50%" style="padding:10px;" class="summaryHeading" colspan="4">
+                        <b>Closed Deals</b>
+                    </th>
+                </tr>
+                <tr>
+                    <td style="vertical-align:top;" colspan="6">
+                        <apex:outputPanel rendered="{!lstResultTop10MPSOpenDeals != null && lstResultTop10MPSOpenDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <th>Proposal (Y/N)</th>
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <th>Next Activity</th>
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10MPSOpenDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <td>{!if(result.proposal,'Y','N')}</td>
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <td>{!result.objDeal.Next_Steps__c}</td>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                    <td class="noborder"/>
+                    <td style="vertical-align:top;" colspan="4">
+                        <apex:outputPanel rendered="{!lstResultTop10MPSClosedDeals != null && lstResultTop10MPSClosedDeals.size > 0}">
+                            <table>
+                                <tr>
+                                    <th class="dealNameWidth">Deal Name</th>
+                                    <th>Revenue</th>
+                                    <!--<th>Proposal (Y/N)</th>-->
+                                    <th>Closing Month</th>
+                                    <th>Type</th>
+                                    <!--<th>Next Activity</th>-->
+                                </tr>
+
+                                <apex:repeat value="{!lstResultTop10MPSClosedDeals}" var="result">
+                                    <tr>
+                                        <td class="dealNameWidth">{!result.objDeal.Name}</td>
+                                        <td>${!result.revenue}</td>
+                                        <!--<td>{!if(result.proposal,'Y','N')}</td>-->
+                                        <td>{!result.closingmonth}</td>
+                                        <td>{!result.objDeal.TSGADX__Type__c}</td>
+                                        <!--<td>{!result.objDeal.Next_Steps__c}</td>-->
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </td>
+                </tr>
+            </table>
+       
+        
+        <h2 class="mainTitle">Update Plans and Needs</h2>
+            <apex:outputPanel rendered="{!strSelectedQuarter == '1'}">
+                <table>
+                    <tr>
+                        <th colspan="6" align="left" class="h3HeadCol">
+                            <h3>Q1 Action Plan</h3>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>ACTION PLAN Q1</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.ACTION_PLAN_Q1__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>TRAINING NEEDS Q1</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.TRAINING_NEEDS_Q1__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>ASSISTANCE NEEDED Q1</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.ASSISTANCE_NEEDED_Q1__c}"/>
+                        </td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!strSelectedQuarter == '2'}">
+                <table>
+                    <tr>
+                        <th colspan="6" align="left" class="h3HeadCol">
+                            <h3>Q2 Action Plan</h3>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>ACTION PLAN Q2</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.ACTION_PLAN_Q2__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>TRAINING NEEDS Q2</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.TRAINING_NEEDS_Q2__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>ASSISTANCE NEEDED Q2</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.ASSISTANCE_NEEDED_Q2__c}"/>
+                        </td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+
+            <apex:outputPanel rendered="{!strSelectedQuarter == '3'}">
+                <table>
+                    <tr>
+                        <th colspan="6" align="left" class="h3HeadCol">
+                            <h3>Q3 Action Plan</h3>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>ACTION PLAN Q3</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.ACTION_PLAN_Q3__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>TRAINING NEEDS Q3</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.TRAINING_NEEDS_Q3__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>ASSISTANCE NEEDED Q3</th>
+                        <td colspan="5">
+                            <apex:outputText value="{!objSalesQuote.ASSISTANCE_NEEDED_Q3__c}"/>
+                        </td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!strSelectedQuarter == '4'}">
+                <table>
+                    <tr>
+                        <th colspan="6" align="left" class="h3HeadCol">
+                            <h3>Q4 Action Plan</h3>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>ACTION PLAN Q4</th>
+                        <td colspan="5">
+                            {!objSalesQuote.ACTION_PLAN_Q4__c}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>TRAINING NEEDS Q4</th>
+                        <td colspan="5">
+                            <apex:outputText escape="false" value="{!objSalesQuote.TRAINING_NEEDS_Q4__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>ASSISTANCE NEEDED Q4</th>
+                        <td colspan="5">
+                            <apex:outputText escape="false" value="{!objSalesQuote.ASSISTANCE_NEEDED_Q4__c}"/>
+                        </td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+        
+        
+</apex:page>

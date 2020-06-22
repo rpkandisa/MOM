@@ -1,0 +1,343 @@
+<apex:page standardController="Lease_Credit_Application__c" showHeader="false">
+
+    <apex:slds />
+    
+    
+    <script src="../../soap/ajax/32.0/connection.js" type="text/javascript"></script>
+    <script src="https://live.runmyprocess.com/script/prototype.js" type="text/javascript"></script>
+    <script src="https://live.runmyprocess.com/script/rmpUtils.js" type="text/javascript"></script>
+    <script src="../../soap/ajax/32.0/apex.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        sforce.connection.sessionId = '{!$Api.Session_ID}'; 
+    </script>
+    <div style="text-align:center;display:none" id="slds-button_neutral-text">Do you wish to continue with the Lease Credit Application?If you click OK wait a few seconds for a confirmation message.</div>
+    <button id="slds-button_neutral-btn" style="display:none" type="button" class="slds-button slds-button_neutral" onclick="remoteFunctionCall();">Ok</button>
+    
+    <script>
+        
+        var id_client=2215480275; //rmp_customer_id 
+        var id_process=45611; //rmp_process_id 
+        var id_key=""; //leave as blank 
+        var login="dbandy@momnet.com"; 
+        var pwd_rmp = "momnet4747"; 
+        var leaseType = '{!Lease_Credit_Application__c.Lease_Type__c}'; 
+        var typeBusiness = '{!Lease_Credit_Application__c.Type_of_Business__c}'; 
+        var leaseTypeCode; 
+        var typeBusinessCode; 
+        
+        var userLastName = '{!JSENCODE($User.LastName)}'; 
+        console.log('userLastName : '+userLastName);
+        var formattedUserLastName =userLastName.replace(/[;\\\\\/:*?"$=()<>|&']/g, " "); 
+        
+        var contactLastName = '{!JSENCODE( Lease_Credit_Application__c.Contact_Last_Name__c )}'; 
+        var formattedContactLastName =contactLastName.replace(/[;\\\\\/:*?"$=()<>|&']/g, " "); 
+        
+        var account = '{!JSENCODE( Lease_Credit_Application__c.Account__r.Name )}'; 
+        var formattedAccount =account.replace(/[;\\\\\/:*?"$=()<>|&']/g, " "); 
+        
+        var formattedBusinessAs = '{!JSENCODE( Lease_Credit_Application__c.Doing_Business_As__c )}'; 
+        formattedBusinessAs = formattedBusinessAs.replace(/[;\\\\\/:*?"$=()<>|&']/g, " "); 
+        
+        var address = '{!JSENCODE( Lease_Credit_Application__c.Address__c )}'; 
+        var formattedAddress =address.replace(/[;\\\\\/:*?"$=()<>|&']/g, " "); 
+        
+        var city = '{!JSENCODE( Lease_Credit_Application__c.City__c )}'; 
+        var formattedCity = city.replace(/[;\\\\\/:*?"$=()<>|&']/g, " "); 
+        
+        formattedCity = formattedCity.toUpperCase(); 
+        
+        var state = '{!Lease_Credit_Application__c.State__c}'; 
+        var formattedState = state.toUpperCase(); 
+        
+        var phone = '{!Lease_Credit_Application__c.Phone__c}'; 
+        var formattedPhone = phone.replace(/\(?([0-9]{3})\)?[\-. ]?([0-9]{3})[\-. ]?([0-9]{4})/g, "$1-$2-$3"); 
+        
+        var phone2 = '{!$User.Phone}'; 
+        var formattedPhone2 = phone2.replace(/\(?([0-9]{3})\)?[\-. ]?([0-9]{3})[\-. ]?([0-9]{4})/g, "$1-$2-$3"); 
+        
+        switch(leaseType) { 
+        case 'FMV': leaseTypeCode = "1"; 
+        break; 
+        case '$1': leaseTypeCode = "4"; 
+        break; 
+        case 'Optional': leaseTypeCode = "7"; 
+        } 
+        
+        switch(typeBusiness) { 
+        case 'NONE': typeBusinessCode = "9"; 
+        break; 
+        case 'PRIVATECORPORATION': typeBusinessCode = "32"; 
+        break; 
+        case 'LIMITEDLIABILITYCORP': typeBusinessCode = "33"; 
+        break; 
+        case 'MUNICIPALITY': typeBusinessCode = "1101"; 
+        break; 
+        case 'UNDETERMINED': typeBusinessCode = "1104"; 
+        break; 
+        case 'PUBLICCORPORATION': typeBusinessCode = "1105"; 
+        break; 
+        case 'PROPRIETORSHIP': typeBusinessCode = "1106"; 
+        break; 
+        case 'PARTNERSHIP': typeBusinessCode = "1107"; 
+        break; 
+        case 'NONPROFIT': typeBusinessCode = "1108"; 
+        break; 
+        case 'CORPORATION': typeBusinessCode = "1109"; 
+        } 
+        
+        var content={equipment_type:'{!Lease_Credit_Application__c.Equipment_Type__c}',lease_finance_amnt:'{!Lease_Credit_Application__c.Finance_Amount__c}',lease_payment_amnt:'{!Lease_Credit_Application__c.Payment_Amount__c}',lease_term:'{!Lease_Credit_Application__c.Term__c}',lease_type:leaseTypeCode, customer_name:formattedAccount, customer_addr:formattedAddress, customer_city:formattedCity, customer_state:formattedState, customer_zip:'{!Lease_Credit_Application__c.Zip__c}', customer_phone:formattedPhone, customer_inbusiness_as:formattedBusinessAs, customer_business_type:typeBusinessCode, customer_fed_tax_id:'{!Lease_Credit_Application__c.Federal_Tax_ID__c}', cust_contact_fname:'{!Lease_Credit_Application__c.Contact_First_Name__c}', cust_contact_lname:formattedContactLastName, application_comments:'{!Lease_Credit_Application__c.Comments_ToSend__c}', contact2_fname:'{!$User.FirstName}', contact2_lname:formattedUserLastName, contact2_email:'{!$User.Email}', contact2_phone:formattedPhone2, contact3_fname:'{!Lease_Credit_Application__c.Manager_Name__c}',contact3_email:'{!Lease_Credit_Application__c.Manager_Email__c}', sf_object_id:'{!Lease_Credit_Application__c.Id}'}; 
+        
+        // WellsFargo specific code added 11/12/2014 
+        var wftypeBusiness = '{!Lease_Credit_Application__c.Type_of_Business__c}'; 
+        switch(wftypeBusiness) { 
+        case 'NONE': wftypeBusiness = "None"; 
+        break; 
+        case 'PRIVATECORPORATION': wftypeBusiness = "Corporation"; 
+        break; 
+        case 'LIMITEDLIABILITYCORP': wftypeBusiness = "Limited Liability Company"; 
+        break; 
+        case 'MUNICIPALITY': wftypeBusiness = "State County Local Government"; 
+        break; 
+        case 'PUBLICCORPORATION': wftypeBusiness = "Corporation"; 
+        break; 
+        case 'PARTNERSHIP': wftypeBusiness = "Partnership"; 
+        break; 
+        case 'NONPROFIT': wftypeBusiness = "Non Profit Corporation"; 
+        break; 
+        case 'CORPORATION': wftypeBusiness = "Corporation"; 
+        break; 
+        case 'FederalGovernment': wftypeBusiness = "Federal Government"; 
+        } 
+        
+        var request_app_no = '{!Lease_Credit_Application__c.Name}'; 
+        var industry = '{!Lease_Credit_Application__c.Account__r.Industry}'; 
+        
+        switch(industry) { 
+        case 'Agriculture': industry = "Agriculture"; 
+        break; 
+        case 'Apparel': industry = "Retail Trade"; 
+        break; 
+        case 'Automotive': industry = "Automotive"; 
+        break; 
+        case 'Banking': industry = "Financial Institution"; 
+        break; 
+        case 'Biotechnology': industry = "Manufacturing/Industrial"; 
+        break; 
+        case 'Chemicals': industry = "Manufacturing/Industrial"; 
+        break; 
+        case 'Communications': industry = "Communication"; 
+        break; 
+        case 'Consulting': industry = "Professional Services"; 
+        break; 
+        case 'Education': industry = "Education"; 
+        break; 
+        case 'Electronics': industry = "Manufacturing/Industrial"; 
+        break; 
+        case 'Energy': industry = "Manufacturing/Industrial"; 
+        break; 
+        case 'Engineering': industry = "Business Offering Services"; 
+        break; 
+        case 'Entertainment': industry = "Business Offering Services"; 
+        break; 
+        case 'Environmental': industry = "Professional Services"; 
+        break; 
+        case 'Finance': industry = "Business Offering Services"; 
+        break; 
+        case 'Food & Beverage': industry = "Restaurant"; 
+        break; 
+        case 'Government': industry = "Government"; 
+        break; 
+        case 'Healthcare': industry = "Medical"; 
+        break; 
+        case 'Hospitality': industry = "Business Offering Services"; 
+        break; 
+        case 'Insurance': industry = "Business Offering Services"; 
+        break; 
+        case 'Legal': industry = "Professional Services"; 
+        break; 
+        case 'Machinery': industry = "Manufacturing/Industrial"; 
+        break; 
+        case 'Manufacturing': industry = "Manufacturing/Industrial"; 
+        break; 
+        case 'Media': industry = "Communication"; 
+        break; 
+        case 'Not For Profit': industry = "Religious"; 
+        break; 
+        case 'Print for Pay': industry = "Business Offering Services"; 
+        break; 
+        case 'Real Estate': industry = "Construction/Real Estate"; 
+        break; 
+        case 'Recreation': industry = "Business Offering Services"; 
+        break; 
+        case 'Religious': industry = "Religious"; 
+        break; 
+        case 'Retail': industry = "Retail Trade"; 
+        break; 
+        case 'Shipping': industry = "Business Offering Services"; 
+        break; 
+        case 'Technology': industry = "Professional Services"; 
+        break; 
+        case 'Telecommunications': industry = "Business Offering Services"; 
+        break; 
+        case 'Transportation': industry = "Business Offering Services"; 
+        break; 
+        case 'Utilities': industry = "Business Offering Services"; 
+        break; 
+        case 'Other': industry = "Business Offering Services"; 
+        break; 
+        default: 
+        industry = "Business Offering Services"; 
+        } 
+        
+        var wfcontent= JSON.stringify({request_app_no:'{!Lease_Credit_Application__c.Name}', 
+        equipment_type:'{!Lease_Credit_Application__c.Equipment_Type__c}',lease_finance_amnt:'{!Lease_Credit_Application__c.Finance_Amount__c}',lease_payment_amnt:'{!Lease_Credit_Application__c.Payment_Amount__c}',lease_term:'{!Lease_Credit_Application__c.Term__c}',lease_type:leaseType, customer_name:formattedAccount, customer_addr:formattedAddress, customer_city:formattedCity, customer_state:formattedState, customer_zip:'{!Lease_Credit_Application__c.Zip__c}', customer_phone:formattedPhone, customer_inbusiness_as:formattedBusinessAs, customer_business_type:wftypeBusiness, 
+        industry:industry, 
+        customer_fed_tax_id:'{!Lease_Credit_Application__c.Federal_Tax_ID__c}', cust_contact_fname:'{!Lease_Credit_Application__c.Contact_First_Name__c}', cust_contact_lname:formattedContactLastName, application_comments:'{!Lease_Credit_Application__c.Comments_ToSend__c}', contact2_fname:'{!$User.FirstName}', contact2_lname:formattedUserLastName, contact2_email:'{!$User.Email}', contact2_phone:formattedPhone2, contact3_fname:'{!Lease_Credit_Application__c.Manager_Name__c}',contact3_email:'{!Lease_Credit_Application__c.Manager_Email__c}'}); 
+        // end of WellsFargo code 
+        
+        var url="https://live.runmyprocess.com/live/" + id_client + "/process/" + id_process; 
+        var feed=getNewRequestFeed(content,"live.runmyprocess.com/live/" + id_client + "/process/" + id_process); 
+        var auth='Basic '+Base64.encode (login+':'+pwd_rmp); 
+        
+        //var agree=confirm("Do you wish to continue with the Lease Credit Application?\n\nIf you click OK wait a few seconds for a confirmation message."); 
+        document.getElementById("slds-button_neutral-text").style = 'display:block;text-align:center;font-weight:bold';
+        document.getElementById("slds-button_neutral-btn").style = 'display:block;float:right';
+        
+   
+        
+        function remoteFunctionCall(){
+            sforce.connection.remoteFunction({ 
+            url : url, 
+            requestHeaders: {"Content-Type":"application/xml+atom","Authorization":auth, "Accept":"application/xml"}, 
+            requestData: feed, 
+            method: "POST", 
+            onSuccess : function(transport) { 
+            listen_process(transport); 
+            
+            // added WellsFargo code 11/12/1042 
+            sforce.apex.execute("MOM_Lease_Credit_App_WellsFargo","Build_WF_Email", {id:"{!Lease_Credit_Application__c.Account__c}" , content:wfcontent , userEmail:"{!$User.Email}"}); 
+            // end of WellsFargo code 
+            
+            // added 5/4/2013 
+            // commented out on 8/28/2015 - requires sales rep have write access to Account 
+            // var connection = sforce.connection; 
+            // var t1= new sforce.SObject("Task" ); 
+            // t1.WhatId = "{!Lease_Credit_Application__c.Account__c}"; 
+            // t1.Subject = "Submitted Credit PreApproval to USB & WF"; 
+            // t1.ActivityDate = new Date(); 
+            // t1.Status = "Completed"; 
+            // t1.Priority = "Normal"; 
+            // result = sforce.connection.create([t1]); 
+            // end of commented lines on 8/28/2015 
+            // 
+            // update credit submit date field on Deal record - added 8-13-2013 
+            var s = new sforce.SObject("TSGADX__Deal__c"); 
+            s.id = "{!Lease_Credit_Application__c.Deal__c}"; 
+            s.Credit_Submit_Date__c = new Date(); 
+            result = sforce.connection.update([s]); 
+            
+            // create completed task in Deal activity history - added 8-13-2013 
+            // commented out on 8/28/2015 - requires sales rep have write access to Account 
+            // var t2= new sforce.SObject("Task" ); 
+            // t2.WhatId = "{!Lease_Credit_Application__c.Deal__c}"; 
+            // t2.Subject = "Submitted Credit Application to USB & WF"; 
+            // t2.ActivityDate = new Date(); 
+            // t2.Status = "Completed"; 
+            // t2.Priority = "Normal"; 
+            // result = sforce.connection.create([t2]); 
+            // end of commented lines on 8/28/2015 
+            // 
+            
+            }, 
+            onFailure : function(transport) {
+                console.log(transport);
+                //alert("Error Starting Process");
+                //document.getElementById('slds-button_neutral-text').innerHtml = 'Error Starting Process';
+                var div = document.getElementById('slds-button_neutral-text');
+                div.innerHTML = 'Error Starting Process';
+                document.getElementById("slds-button_neutral-btn").style = 'display:none;';
+               } 
+            }); 
+            
+        }
+        
+        
+        /*******************************************/ 
+        /* Process listener */ 
+        /*******************************************/ 
+        function listen_process(url) { 
+            sforce.connection.remoteFunction({ 
+            url : url, 
+            requestHeaders: {"Content-Type":"application/xml+atom","Authorization":auth, "Accept":"application/xml"}, 
+            requestData: feed, 
+            method: "GET", 
+            mimeType: "text/xml", 
+            onSuccess : function(transport) { 
+                parse_xml(transport,url); 
+            }, 
+            onFailure : function(transport) {
+                //alert("error on process");
+                //document.getElementById('slds-button_neutral-text').innerHtml = 'error on process';
+                var div = document.getElementById('slds-button_neutral-text');
+                div.innerHTML = 'error on process';
+        
+                document.getElementById("slds-button_neutral-btn").style = 'display:none;';
+                //viewRecord();
+            } 
+            }); 
+        } 
+        
+        /*******************************************/ 
+        /* Parser du XML recu */ 
+        /*******************************************/ 
+        function parse_xml(docxml,url) { 
+        var status_node = docxml.getElementsByTagName('category').item(0); 
+        var status=status_node.getAttribute('label'); 
+        
+        switch (status) { 
+        
+        case "201": 
+        /* process completed */ 
+        //alert("Application Submitted Successfully.");
+        //document.getElementById('slds-button_neutral-text').innerHtml = 'Application Submitted Successfully.';
+        var div = document.getElementById('slds-button_neutral-text');
+        div.innerHTML = 'Application Submitted Successfully.';
+        
+        document.getElementById("slds-button_neutral-btn").style = 'display:none;';
+                 
+        //viewRecord();
+        //location.reload(true); 
+        
+        break; 
+        
+        case "102": 
+        /* process waiting */ 
+        listen_process(url); 
+        break; 
+        
+        case "301": 
+        /* error on process */ 
+        //alert("error on process"); 
+        //document.getElementById('slds-button_neutral-text').innerHtml = 'error on process';
+        var div = document.getElementById('slds-button_neutral-text');
+        div.innerHTML = 'error on process';
+        document.getElementById("slds-button_neutral-btn").style = 'display:none;';
+        
+        break; 
+        
+        default: /* process not finished */ 
+        listen_process(url); 
+        } 
+        }
+        
+        function viewRecord(){
+            console.log('viewRecord');
+            sforce.one.navigateToSObject('{!Lease_Credit_Application__c.Id}', "detail");
+        }
+    </script>
+    
+    
+    
+    
+    
+</apex:page>

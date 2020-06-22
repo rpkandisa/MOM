@@ -1,0 +1,6 @@
+<apex:page standardController="Lease_Credit_Application__c" recordSetVar="Lease_Credit_Application__c" tabStyle="Lease_Credit_Application__c">
+   <apex:listViews type="Lease_Credit_Application__c">
+        <apex:facet name="header">&nbsp;</apex:facet>
+    </apex:listViews>
+
+</apex:page>

@@ -1,0 +1,151 @@
+<apex:page sidebar="false" showHeader="false" controller="FeedbackCon">
+
+    <style>
+        .toppancon {
+            height: 126px;        
+            background-color: #ededed;
+            width: 100%;
+            position: relative;
+        }
+        
+        ul.topicon {
+            width: auto;
+            float: right;
+            margin: 21px 0 18px 0;
+        }
+        ul, li {
+            list-style-type: none;
+        }
+        ul.topicon li {
+            float: left;
+            margin: 0 0 0 2px;
+            display: block;
+            height: 31px;    
+            width: 32px;
+        }
+        .copy {
+            font-size: 11px;
+            line-height: 12px;
+            font-family: 'Open Sans', sans-serif;
+            color: #989898;
+            text-align: center;
+        }
+        .footlogo {
+            margin: 10px auto;
+            display: block;
+            width: auto;
+        }
+   </style>            
+                    <div class="toppancon">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" width="960">
+                            <tbody>
+                                <tr>
+                                    <td align="left" height="126"  width="205"><a href="http://www.momnet.com" target="_blank"><img alt="" class="logopad" src="http://www.momnet.com/sw/themes/36137/site_images/logo.gif"/></a></td>
+                                    <td align="left" valign="top">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tbody>
+                                                <tr>
+                                                    <td align="left" valign="top">
+                                                        <ul class="topicon">
+                                                            <li><a href="http://www.facebook.com/modernofficemethods" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/face-icon.gif"/></a></li>
+                                                            <li><a href="http://twitter.com/modern_office" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/twt-icon.gif"/></a></li>
+                                                            <li><a href="http://www.linkedin.com/company/59755?trk=tyah" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/in-icon.gif"/></a></li>
+                                                            <li><a href="http://modernofficemethods.blogspot.com/" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/b-icon.gif"/></a></li>
+                                                            <li><a href="https://www.youtube.com/modernoffice1957" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/you-icon.gif"/></a></li>
+                                                            <li><a href="https://google.com/+Momnet" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/g-icon.gif"/></a></li>
+                                                            <li><a href="http://pinterest.com/mommodernoffice/" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/p-icon.gif"/></a></li>
+                                                        </ul>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+   
+   <br/>
+   <apex:form rendered="{!displaySurvey}">
+       <table align="center">    
+        <tr><td><h1>Your feedback is extremely valuable and will be used to improve our process, products and service offerings in the future.</h1></td></tr>
+        <tr><td><br/></td></tr>    
+        <tr><td>Can you tell me how you reached your final decision?</td></tr>
+        <tr><td><apex:inputCheckbox value="{!DCPrice}"  /> Price <br/>
+        <apex:inputCheckbox value="{!DCService}"/> Service<br/>
+        <apex:inputCheckbox value="{!DCQuality}"/> Quality<br/>
+        <apex:inputCheckbox value="{!DCOthers}"/> Relationship<br/>
+        <apex:inputCheckbox value="{!DCRelationship}"/> Other<br/>
+        </td></tr>
+        
+        <tr><td>Were you happy with the knowledge level of your account executive?</td></tr>
+        <tr><td>
+        <apex:selectRadio layout="pageDirection" value="{!SKOption}">
+        
+            <apex:selectOptions value="{!SK}"/>
+          
+        </apex:selectRadio>
+        </td></tr>
+                
+        <tr><td>Did they clearly explain the other offerings that MOM has to offer?</td></tr>
+        <tr><td>
+        <apex:selectRadio layout="pageDirection" value="{!MOOption}">
+        
+            <apex:selectOptions value="{!MO}"/>
+          
+        </apex:selectRadio>
+        </td></tr>
+        
+        <tr><td>Would you consider doing business with MOM in the future?  Recommend MOM to others?</td></tr>
+        <tr><td>
+        <apex:selectRadio layout="pageDirection" value="{!RecommendOption}">
+        
+            <apex:selectOptions value="{!Recommend}"/>
+          
+        </apex:selectRadio>
+        </td></tr>        
+        
+        <tr><td>Please provide any comments:</td></tr>
+ <tr><td>       <apex:inputTextarea value="{!ProsFeedback}"  cols="80" rows="5"/>
+            </td></tr> 
+<tr><td>           <apex:commandButton value="Submit" action="{!submitSurvey}"/></td></tr> 
+    </table>       
+    </apex:form>
+    
+    <apex:outputPanel rendered="{!NOT(displaySurvey)}">
+    <table align="center">
+        <tr>
+            <td>
+            Invalid Code
+            <script>
+                window.onload = function(){
+                    
+                    var leave = {!displaySurvey}; 
+                    if(leave == false){
+                
+                        setInterval(function () { window.parent.location = "http://www.momnet.com" }, 3000);
+                
+                    }
+                
+                }
+    
+            </script>
+            </td>
+        </tr>
+    </table>
+    </apex:outputPanel>
+   
+    <td align="left" valign="top">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="960" style="margin-top: 50px;">
+                    <tbody>
+                        <tr>
+                            <td align="left" valign="top">
+                                <p class="copy">Copyright 2014 MOM. All Rights Reserved.</p>
+                                <a href="http://www.momnet.com" target="_blank"><img alt="" class="footlogo" src="http://www.momnet.com/sw/themes/36137/site_images/foot-logo.gif"/></a>                                
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+      </td>
+
+</apex:page>

@@ -1,0 +1,35 @@
+<apex:page >
+<apex:includeScript value="/soap/ajax/28.0/connection.js"/>
+<apex:includeScript value="/soap/ajax/28.0/apex.js"/>
+<script>
+
+sforce.connection.sessionId = "{!$Api.Session_ID}";
+
+var accountID = "{!$CurrentPage.parameters.AccId}";
+var agreementID = "{!$CurrentPage.parameters.RecId}";
+
+var queryResult = sforce.connection.query("SELECT TSGADX__Business_Name__r.Name, EA_Lease_Number__c,  EA_Leasing_Company_Name__c FROM TSGADX__Agreements__c WHERE Id = '{!$CurrentPage.parameters.RecId}'");
+
+var records = queryResult.getArray('records');
+var leaseAgreement = records[0];
+
+sforce.apex.execute("MOM_LeaseBuyoutRequest","RelatedLeases", {id:leaseAgreement.TSGADX__Business_Name__r.Name , 
+leaseNumber:leaseAgreement.EA_Lease_Number__c ,
+leaseCompany:leaseAgreement.EA_Leasing_Company_Name__c ,
+userEmail:"{!$User.Email}"}); 
+
+var t1= new sforce.SObject("Task" ); 
+t1.WhatId = "{!$CurrentPage.parameters.AccId}";
+t1.Subject = "Submitted Lease Buyout for lease # " + leaseAgreement.EA_Lease_Number__c; 
+t1.ActivityDate = new Date();
+t1.Status = "In Progress"; 
+t1.Priority = "Normal";
+//t1.Comments = "Follow-up to ensure lease buyout was processed by MOM leasing.";
+result = sforce.connection.create([t1]);
+
+window.alert("A lease buyout request has been sent to MOM Leasing.\nA task has been created in the Business Open Activities section." );
+
+window.location.href = '/{!$CurrentPage.parameters.AccId}';
+
+</script>
+</apex:page>

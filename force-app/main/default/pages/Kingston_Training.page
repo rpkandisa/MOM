@@ -1,0 +1,33 @@
+<apex:page >
+<h1>Kingston Training Group Teleseminar List</h1>
+<ul>
+<li><a href="http://InstantTeleseminar.com/?eventid=10352379" target="_blank">Keeping Your Team on Track</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=10700580" target="_blank">Prospecting - Crawl, Walk, Run</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=11238915" target="_blank">Repercussions</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=11862363" target="_blank">Managing Activity</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=12151785" target="_blank">Keeping Your Team on Track</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=12811395" target="_blank">How to Convert Training into Sales Revenue</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=13264680" target="_blank">Time Wasters</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=13772649" target="_blank">How To Motivate Your Sales Team</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=14324277" target="_blank">Networking and Centers of Influence</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=14829159" target="_blank">What Do I Do If. . .</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=15224295" target="_blank">Bruce Harrell - Thoughts on Managers</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=15848625" target="_blank">Helping Your Team Focus on the Sales Funnel</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=16369698" target="_blank">How to Convert Training into Sales Revenue</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=16883715" target="_blank">Getting Off to a Good Start in the New Year</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=17520204" target="_blank">How to Indocterine New Hires into the KTG Process</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=18042033" target="_blank">Ideas to Implement This Month</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=18813468" target="_blank">How Managers Can Keep Their Team Focused</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=19434963" target="_blank">Training New Team Members</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=20142012" target="_blank">Time Management 1</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=20800992" target="_blank">Prospecting</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=21751788" target="_blank">Time Management 2</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=32781765" target="_blank">Repetition Is A Mother</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=35831091" target="_blank">Starting January Off Right…</a></li>
+<li><a href="http://InstantTeleseminar.com/?eventid=40986192" target="_blank">Tactics and Ideas For Mapping Out Your Workweek</a></li>
+</ul>
+<h1>Kingston Training Group Vertical Marketing Guide</h1>
+<ul>
+<li><a href="https://docs.google.com/a/momnet.com/file/d/0B3qKljUt0xVbRnhqb2ctYzZxdHc" target="_blank">Vertical Marketing Guide 2014</a></li>
+</ul>
+</apex:page>

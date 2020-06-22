@@ -1,0 +1,3 @@
+<apex:page standardController="TSGADX__Deal__c" docType="html-5.0" title="Webmerge Documents: {!TSGADX__Deal__c}" showHeader="false" sidebar="false">
+    <webm:WebmergeWizard record="{!TSGADX__Deal__c}" />
+</apex:page>

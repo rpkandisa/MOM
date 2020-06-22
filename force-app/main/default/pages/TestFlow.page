@@ -1,0 +1,3 @@
+<apex:page >
+<flow:interview name="Sustainability_Survey" buttonStyle="color:#050; background-color:#fed; border:1px solid;"/>
+</apex:page>

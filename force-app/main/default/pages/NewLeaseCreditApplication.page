@@ -1,0 +1,82 @@
+<apex:page standardController="TSGADX__Deal__c" extensions="NewLeaseCreditApplicationExtension" showHeader="false" lightningStylesheets="true">
+    
+    
+    <div class="slds-align_absolute-center" id="lwc-button-back" style="height: 10rem;text-align:center"></div>
+    
+    <script>
+        var isInLightningExperience = typeof sforce !== "undefined" && sforce && sforce.one;
+        var regex = /(<([^>\r\n\n]+)>)/ig;
+        var regex2 = /[;\\\\\/:*?"$=()<>|&']/g;
+        
+        if (isInLightningExperience) {
+            lexUI();
+        } else {
+            classicUI();
+        }
+        
+        function lexUI(){
+            var leaseCredit = {};
+            leaseCredit['Deal__c'] = '{!TSGADX__Deal__c.Id}'; 
+            if('{!account}' != ''){
+                
+                leaseCredit['Account__c'] = '{!account.Id}';
+                leaseCredit['Address__c'] = '{!JSENCODE(account.BillingStreet)}'.replace(regex, "");
+                leaseCredit['City__c'] = '{!account.BillingCity}';
+                leaseCredit['State__c'] = '{!account.BillingState}';
+                leaseCredit['Zip__c'] = '{!account.BillingPostalCode}';
+                leaseCredit['Phone__c'] = '{!account.Phone}';
+                
+            }else{
+                
+                leaseCredit['Account__c'] = '{!JSENCODE(TSGADX__Deal__c.TSGADX__Company__c)}';
+                leaseCredit['Address__c'] = '{!JSENCODE(TSGADX__Deal__c.TSGADX__Business_Street_Address__c)}';
+                leaseCredit['City__c'] = '{!TSGADX__Deal__c.TSGADX__Business_City__c}';
+                leaseCredit['State__c'] = '{!TSGADX__Deal__c.TSGADX__Business_State__c}';
+                leaseCredit['Zip__c'] = '{!TSGADX__Deal__c.TSGADX__Business_Postal_Code__c}';
+                leaseCredit['Phone__c'] = '{!TSGADX__Deal__c.TSGADX__Business_Phone__c}';
+            }
+            
+            sforce.one.createRecord('Lease_Credit_Application__c', null, leaseCredit);
+            
+            var button = document.createElement("BUTTON");
+            button.className = "slds-button slds-button_neutral"; 
+            var buttonText = document.createTextNode("View Record");
+            button.setAttribute("onClick", "viewRecord();");
+            button.appendChild(buttonText);
+            document.getElementById('lwc-button-back').appendChild(button);
+        
+        }
+        
+        function viewRecord(){
+            console.log('viewRecord');
+            sforce.one.navigateToSObject('{!TSGADX__Deal__c.Id}', "detail");
+        }
+        
+        function classicUI(){
+            var url = '/a1C/e?CF00NG0000009cl4o={!JSENCODE(TSGADX__Deal__c.Name)}&CF00NG0000009cl4o_lkid={!TSGADX__Deal__c.Id}';
+            
+            if('{!account}' != ''){
+                 url += '&CF00NG0000008ODGm=' + '{!JSENCODE(account.Name)}'.replace(regex2, "");
+                 url += '&CF00NG0000008ODGm_lkid=' + '{!account.Id}';
+                 url += '&00NG0000008ODGn=' + '{!JSENCODE(account.BillingStreet)}'.replace(regex, "");
+                 url += '&00NG0000008ODGo=' + '{!account.BillingCity}';
+                 url += '&00NG0000008ODH5=' + '{!account.BillingState}';
+                 url += '&00NG0000008ODH9=' + '{!account.BillingPostalCode}';
+                 url += '&00NG0000008ODH2=' + '{!account.Phone}';
+                 url += '&retURL=/{!TSGADX__Deal__c.Id}';
+            }else{
+                var account = "{!JSENCODE(TSGADX__Deal__c.TSGADX__Company__c)}"; 
+                var bstreet = "{!JSENCODE(TSGADX__Deal__c.TSGADX__Business_Street_Address__c)}"; 
+                url += '&CF00NG0000008ODGm=' + account.replace(regex, ""); 
+                url += '&00NG0000008ODGn=' + bstreet.replace(regex, ""); 
+                url += '&00NG0000008ODGo={!TSGADX__Deal__c.TSGADX__Business_City__c}'; 
+                url += '&00NG0000008ODH5={!TSGADX__Deal__c.TSGADX__Business_State__c}'; 
+                url += '&00NG0000008ODH9={!TSGADX__Deal__c.TSGADX__Business_Postal_Code__c}'; 
+                url += '&00NG0000008ODH2={!TSGADX__Deal__c.TSGADX__Business_Phone__c}'; 
+                url += '&retURL=/{!TSGADX__Deal__c.Id}'; 
+            }
+            window.parent.open(url, "_self");
+                        
+        }
+    </script>
+</apex:page>

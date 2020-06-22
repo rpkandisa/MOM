@@ -1,0 +1,98 @@
+<apex:page sidebar="false" showHeader="false">
+
+    <style>
+        .toppancon {
+            height: 126px;        
+            background-color: #ededed;
+            width: 100%;
+            position: relative;
+        }
+        
+        ul.topicon {
+            width: auto;
+            float: right;
+            margin: 21px 0 18px 0;
+        }
+        ul, li {
+            list-style-type: none;
+        }
+        ul.topicon li {
+            float: left;
+            margin: 0 0 0 2px;
+            display: block;
+            height: 31px;    
+            width: 32px;
+        }
+        .copy {
+            font-size: 11px;
+            line-height: 12px;
+            font-family: 'Open Sans', sans-serif;
+            color: #989898;
+            text-align: center;
+        }
+        .footlogo {
+            margin: 10px auto;
+            display: block;
+            width: auto;
+        }
+   </style>            
+                    <div class="toppancon">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" width="960">
+                            <tbody>
+                                <tr>
+                                    <td align="left" height="126"  width="205"><a href="http://www.momnet.com" target="_blank"><img alt="" class="logopad" src="http://www.momnet.com/sw/themes/36137/site_images/logo.gif"/></a></td>
+                                    <td align="left" valign="top">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tbody>
+                                                <tr>
+                                                    <td align="left" valign="top">
+                                                        <ul class="topicon">
+                                                            <li><a href="http://www.facebook.com/modernofficemethods" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/face-icon.gif"/></a></li>
+                                                            <li><a href="http://twitter.com/modern_office" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/twt-icon.gif"/></a></li>
+                                                            <li><a href="http://www.linkedin.com/company/59755?trk=tyah" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/in-icon.gif"/></a></li>
+                                                            <li><a href="http://modernofficemethods.blogspot.com/" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/b-icon.gif"/></a></li>
+                                                            <li><a href="https://www.youtube.com/modernoffice1957" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/you-icon.gif"/></a></li>
+                                                            <li><a href="https://google.com/+Momnet" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/g-icon.gif"/></a></li>
+                                                            <li><a href="http://pinterest.com/mommodernoffice/" target="_blank"><img alt="" src="http://www.momnet.com/sw/themes/36137/site_images/p-icon.gif"/></a></li>
+                                                        </ul>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+   
+   <br/>    
+     <table align="center" style="font-size:16px;" valign="center">
+        <tr>
+            <td>
+                <b>Thank you for your feedback</b>
+            </td>
+        </tr>
+    </table>
+   
+    <td align="left" valign="top">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="960" style="margin-top: 50px;">
+                    <tbody>
+                        <tr>
+                            <td align="left" valign="top" >
+                                <p class="copy">Copyright 2014 MOM. All Rights Reserved.</p>
+                                <a href="http://www.momnet.com" target="_blank"><img alt="" class="footlogo" src="http://www.momnet.com/sw/themes/36137/site_images/foot-logo.gif"/></a>
+
+                                
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+<script>
+    window.onload = function(){
+    
+        setInterval(function () { window.parent.location = "http://www.momnet.com" }, 3000);
+    
+    }    
+</script>
+</apex:page>

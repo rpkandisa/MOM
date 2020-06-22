@@ -1,0 +1,55 @@
+<apex:page >
+<apex:includeScript value="/soap/ajax/28.0/connection.js"/>
+<apex:includeScript value="/soap/ajax/28.0/apex.js"/>
+<script>
+
+sforce.connection.sessionId = "{!$Api.Session_ID}";
+
+try
+{
+var s1 = "SELECT TSGADX__Business__r.Name, TSGADX__Lease_ID__c,";
+var s2 = "(SELECT Agreement__r.EA_Leasing_Company_Name__c FROM Agreement_Details__r WHERE Agreement__r.EA_Lease_Number__c = '{!$CurrentPage.parameters.lRecId}' limit 1) ";
+var s3 = " FROM TSGADX__Equipment__c WHERE Id = '{!$CurrentPage.parameters.eRecId}' limit 1";
+
+var queryResult = sforce.connection.query(s1 + s2 + s3);
+
+var it = new sforce.QueryResultIterator(queryResult);
+while(it.hasNext()) {
+    var main = it.next();
+    var businessName = main.TSGADX__Business__r.Name;
+    var leaseNumber = main.TSGADX__Lease_ID__c;
+
+    var subQueryIterator = new sforce.QueryResultIterator(main['Agreement_Details__r']);
+    var i = 0;
+    while(subQueryIterator.hasNext()) {
+        var subItem = subQueryIterator.next();
+        var leasingCompanyName = subItem.Agreement__r.EA_Leasing_Company_Name__c;
+        i = i + 1;
+    }   
+}
+
+sforce.apex.execute("MOM_LeaseBuyoutRequest","RelatedLeases", {id:businessName , 
+leaseNumber:leaseNumber ,
+leaseCompany:leasingCompanyName ,
+userEmail:"{!$User.Email}"}); 
+
+var t1= new sforce.SObject("Task" ); 
+t1.WhatId = "{!$CurrentPage.parameters.AccId}";
+t1.Subject = "Submitted Lease Buyout for lease # " + leaseNumber; 
+t1.ActivityDate = new Date();
+t1.Status = "In Progress"; 
+t1.Priority = "Normal";
+result = sforce.connection.create([t1]);
+
+window.alert("A lease buyout request has been sent to MOM Leasing.\nA task has been created in the Business Open Activities section." );
+
+}
+catch (error)
+{
+window.alert("Ah crap, an error occurred so no buyout was submitted. Please contact the Salesforce administrator.");
+}
+
+window.location.href = '/{!$CurrentPage.parameters.AccId}';
+
+</script>
+</apex:page>
