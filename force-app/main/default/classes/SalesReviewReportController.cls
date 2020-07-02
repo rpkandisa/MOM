@@ -92,6 +92,31 @@ public class SalesReviewReportController {
     set;
   }
 
+  public transient List<clsReadOnlySales> lstSalesQuotaDetailReadOnly {
+    get;
+    set;
+  }
+
+  public transient List<clsReadOnlySales> lstSalesQuotaDetailMFPReadOnly {
+    get;
+    set;
+  }
+
+  public transient List<clsReadOnlySales> lstSalesQuotaDetailMPSReadOnly {
+    get;
+    set;
+  }
+
+  public transient List<clsReadOnlySales> lstSalesQuotaDetailProductionReadOnly {
+    get;
+    set;
+  }
+
+  public transient List<clsReadOnlySales> lstSalesQuotaDetailSoftwareReadOnly {
+    get;
+    set;
+  }
+
   public Sales_Quota__c objSalesQuote { get; set; }
   public Sales_Quota__c objSalesQuoteQuarter { get; set; }
 
@@ -1281,7 +1306,9 @@ public class SalesReviewReportController {
         SELECT
           Count(Id) totalDeals,
           TSGADX__Sales_Stage__c,
-          TSGADX__Type__c type
+          TSGADX__Type__c type,
+          RecordType.DeveloperName Category,
+          SUM(Internal_Total__c) totalprice
         FROM TSGADX__Deal__c
         WHERE
           (OwnerId = :strSelectedRep
@@ -1297,11 +1324,15 @@ public class SalesReviewReportController {
               .addmonths(1)
               .toStartOfMonth())
             .adddays(-1)
-        GROUP BY TSGADX__Sales_Stage__c, TSGADX__Type__c
+        GROUP BY
+          TSGADX__Sales_Stage__c,
+          TSGADX__Type__c,
+          RecordType.DeveloperName
+
       ]
     );
-    monthlySummaryRep = getAvgSummaryRepZbo(lstsummmodelAvgRepZbo, false);
-    monthlySummaryZbo = getAvgSummaryRepZbo(lstsummmodelAvgRepZbo, true);
+    monthlySummaryRep = getAvgSummaryRepZbo(lstsummmodelAvgRepZbo, false, '');
+    monthlySummaryZbo = getAvgSummaryRepZbo(lstsummmodelAvgRepZbo, true, '');
 
     //Current Deals
     //Calculation Ratio Win/Loss, Agreegating Total Win Lost and Lost to Competition
@@ -1310,7 +1341,9 @@ public class SalesReviewReportController {
         SELECT
           Count(Id) totalDeals,
           TSGADX__Sales_Stage__c,
-          TSGADX__Type__c type
+          TSGADX__Type__c type,
+          RecordType.DeveloperName Category,
+          SUM(Internal_Total__c) totalprice
         FROM TSGADX__Deal__c
         WHERE
           (OwnerId = :strSelectedRep
@@ -1326,13 +1359,21 @@ public class SalesReviewReportController {
               .addmonths(1)
               .toStartOfMonth())
             .adddays(-1)
-        GROUP BY TSGADX__Sales_Stage__c, TSGADX__Type__c
+        GROUP BY
+          TSGADX__Sales_Stage__c,
+          TSGADX__Type__c,
+          RecordType.DeveloperName
+
       ]
     );
-    currentSummaryRep = getSummaryRepZbo(lstsummmodelRepZbo, false);
-    currentSummaryZbo = getSummaryRepZbo(lstsummmodelRepZbo, true);
+    currentSummaryRep = getSummaryRepZbo(lstsummmodelRepZbo, false, '');
+    currentSummaryZbo = getSummaryRepZbo(lstsummmodelRepZbo, true, '');
     //monthlySummaryRep = getAvgSummaryRepZbo(lstsummmodelRepZbo,false);
     //monthlySummaryZbo = getAvgSummaryRepZbo(lstsummmodelRepZbo,true);
+
+    if (!Test.isRunningTest()) {
+      findtotalsales(); // added to calculate read only section for sales Quote's
+    }
 
     //Rep Forcast
     Sales_Team_Setting__c salesTeamcustomsetting = Sales_Team_Setting__c.getOrgDefaults();
@@ -1349,6 +1390,13 @@ public class SalesReviewReportController {
     intResultRepForcast = 0;
     inttotalRevenueRepForcast = 0;
     lstResultRepForcast = new List<WrapperforcastResults>();
+
+    Decimal intWonREVTotal = 0,
+      intWonAFRTotal = 0,
+      intWithoutWonREVTotal = 0,
+      intWithoutWonAFRTotal = 0;
+    List<WrapperforcastResults> lstResultRepForcastWON = new List<WrapperforcastResults>();
+    List<WrapperforcastResults> lstResultRepForcastWithoutWON = new List<WrapperforcastResults>();
     for (
       TSGADX__Deal__c deal : [
         SELECT
@@ -1392,9 +1440,10 @@ public class SalesReviewReportController {
         //TSGADX__Close_Date__c <=: ((Date.today().AddMonths(3).toStartOfMonth()).addMonths(1)).AddDays(-1))
         //TSGADX__Close_Date__c <=: (Date.today().AddMonths(3).toStartOfMonth()).AddDays(-1))
         ORDER BY
+          Owner.Name ASC,
           Deal_Activity_Monitor_Color_Order__c ASC,
           TSGADX__Total_Dollars__c DESC
-        LIMIT 999
+        LIMIT 997
       ]
     ) {
       //if(deal.TSGADX__Forecast_Category__c == 'Probable' || deal.TSGADX__Sales_Stage__c == 'Won' ){
@@ -1404,7 +1453,31 @@ public class SalesReviewReportController {
       } else {
         wrpobj = new WrapperforcastResults(deal, currentSummaryZbo);
       }
-      lstResultRepForcast.add(wrpobj);
+      //lstResultRepForcast.add(wrpobj);
+
+      if (deal.TSGADX__Sales_Stage__c == 'Won') {
+        if (wrpobj.automatedForcastrev != null) {
+          intWonAFRTotal =
+            intWonAFRTotal + integer.valueof(wrpobj.automatedForcastrev);
+        }
+
+        if (wrpobj.totalRevenue != null) {
+          intWonREVTotal =
+            intWonREVTotal + integer.valueof(wrpobj.totalRevenue);
+        }
+        lstResultRepForcastWON.add(wrpobj);
+      } else {
+        if (wrpobj.automatedForcastrev != null) {
+          intWithoutWonAFRTotal =
+            intWithoutWonAFRTotal + integer.valueof(wrpobj.automatedForcastrev);
+        }
+
+        if (wrpobj.totalRevenue != null) {
+          intWithoutWonREVTotal =
+            intWithoutWonREVTotal + integer.valueof(wrpobj.totalRevenue);
+        }
+        lstResultRepForcastWithoutWON.add(wrpobj);
+      }
 
       if (wrpobj.automatedForcastrev != null) {
         intResultRepForcast =
@@ -1417,6 +1490,25 @@ public class SalesReviewReportController {
       }
       //}
     }
+
+    if (lstResultRepForcastWON.size() > 0) {
+      WrapperforcastResults wrpobj = new WrapperforcastResults();
+      wrpobj.OwnerName = 'Won';
+      wrpobj.automatedForcastPercent = intWonAFRTotal.format();
+      wrpobj.revenue = intWonREVTotal.format();
+      lstResultRepForcastWON.add(wrpobj);
+      lstResultRepForcast.addAll(lstResultRepForcastWON);
+    }
+
+    if (lstResultRepForcastWithoutWON.size() > 0) {
+      WrapperforcastResults wrpobj = new WrapperforcastResults();
+      wrpobj.OwnerName = 'Remaining Forecast';
+      wrpobj.automatedForcastPercent = intWithoutWonAFRTotal.format();
+      wrpobj.revenue = intWithoutWonREVTotal.format();
+      lstResultRepForcastWithoutWON.add(wrpobj);
+      lstResultRepForcast.addAll(lstResultRepForcastWithoutWON);
+    }
+
     if (lstResultRepForcast.size() > 0) {
       WrapperforcastResults wrpobj;
       wrpobj = new WrapperforcastResults();
@@ -2393,10 +2485,19 @@ public class SalesReviewReportController {
 
   public SummaryModel getSummaryRepZbo(
     List<AggregateResult> agrResults,
-    Boolean isZbo
+    Boolean isZbo,
+    String Category
   ) {
     SummaryModel sm = new SummaryModel();
     for (AggregateResult agr : agrResults) {
+      if (
+        (agr.get('Category') != null && String.isNotBlank(Category) &&
+        String.valueof(agr.get('Category')) != Category) ||
+        (agr.get('Category') == null && String.isNotBlank(Category))
+      ) {
+        continue;
+      }
+
       string strtype = string.valueof(agr.get('type'));
 
       if (
@@ -2410,8 +2511,13 @@ public class SalesReviewReportController {
         continue;
       }
 
-      Integer dealCount = Integer.ValueOf(agr.get('totalDeals'));
+      Decimal totalprice = 0;
+      if (agr.get('totalprice') != null) {
+        totalprice = (Decimal) agr.get('totalprice');
+        sm.avgdealprice += totalprice;
+      }
 
+      Integer dealCount = Integer.ValueOf(agr.get('totalDeals'));
       if (agr.get('TSGADX__Sales_Stage__c') == 'Lost') {
         sm.totalLost += dealCount;
       }
@@ -2479,13 +2585,23 @@ public class SalesReviewReportController {
 
   public avgSummaryModel getAvgSummaryRepZBO(
     List<AggregateResult> agrResults,
-    Boolean isZbo
+    Boolean isZbo,
+    String Category
   ) {
     //Integer mnth = Date.Today().Month();
     Integer mnth = 12;
 
     avgSummaryModel sm = new avgSummaryModel();
     for (AggregateResult agr : agrResults) {
+      system.debug('category##### ' + agr.get('Category'));
+      if (
+        (agr.get('Category') != null && String.isNotBlank(Category) &&
+        String.valueof(agr.get('Category')) != Category) ||
+        (agr.get('Category') == null && String.isNotBlank(Category))
+      ) {
+        continue;
+      }
+
       string strtype = string.valueof(agr.get('type'));
       if (
         isZbo &&
@@ -2496,6 +2612,12 @@ public class SalesReviewReportController {
       }
       if (!isZbo && strtype.tolowercase() != 'replacement') {
         continue;
+      }
+
+      Decimal totalprice = 0;
+      if (agr.get('totalprice') != null) {
+        totalprice = (Decimal) agr.get('totalprice');
+        sm.avgdealprice += totalprice;
       }
 
       Integer dealCount = Integer.ValueOf(agr.get('totalDeals'));
@@ -2608,6 +2730,7 @@ public class SalesReviewReportController {
     public Decimal winPercent { get; set; }
     public Decimal lostPercent { get; set; }
     public Integer totalCount { get; set; }
+    public Decimal avgdealprice { get; set; }
 
     public SummaryModel() {
       totalLost = 0;
@@ -2616,6 +2739,7 @@ public class SalesReviewReportController {
       winPercent = 0;
       lostPercent = 0;
       totalCount = 0;
+      avgdealprice = 0;
     }
   }
 
@@ -2627,6 +2751,7 @@ public class SalesReviewReportController {
     public Decimal winPercent { get; set; }
     public Decimal lostPercent { get; set; }
     public Decimal totalCount { get; set; }
+    public Decimal avgdealprice { get; set; }
 
     public avgSummaryModel() {
       totalLost = 0;
@@ -2635,6 +2760,7 @@ public class SalesReviewReportController {
       winPercent = 0;
       lostPercent = 0;
       totalCount = 0;
+      avgdealprice = 0;
     }
   }
 
@@ -2869,6 +2995,7 @@ public class SalesReviewReportController {
     public Decimal automatedForcastrev { get; set; }
     public Decimal totalRevenue { get; set; }
     public string proposalDone { get; set; }
+    public string salesStage { get; set; }
     public WrapperforcastResults() {
     }
     public WrapperforcastResults(
@@ -2876,6 +3003,11 @@ public class SalesReviewReportController {
       SummaryModel currentSummary
     ) {
       this.objDeal = deal;
+
+      if (String.isNotBlank(this.objDeal.TSGADX__Sales_Stage__c)) {
+        salesStage = this.objDeal.TSGADX__Sales_Stage__c;
+      }
+
       this.OwnerName = deal.owner.name;
       if (this.objDeal.TSGADX__Type__c == 'Replacement') {
         this.newplacementreplacement = 'Replacement';
@@ -2955,27 +3087,15 @@ public class SalesReviewReportController {
     }
   }
 
-  public class wrpSalesData {
-    public string fieldName1 { get; set; }
-    public string fieldNameValue1 { get; set; }
-    public string fieldName2 { get; set; }
-    public string fieldNameValue2 { get; set; }
-    public string fieldName3 { get; set; }
-    public string fieldNameValue3 { get; set; }
-    public string fieldName4 { get; set; }
-    public string fieldNameValue4 { get; set; }
-    public string fieldName5 { get; set; }
-    public string fieldNameValue5 { get; set; }
-  }
-
-  private List<wrpSalesData> findTotalSales() {
+  public void findTotalSales() {
     List<AggregateResult> lstData = new List<AggregateResult>(
       [
         SELECT
           Count(Id) totalDeals,
           TSGADX__Sales_Stage__c,
           TSGADX__Type__c type,
-          RecordType.DeveloperName Category
+          RecordType.DeveloperName Category,
+          SUM(Internal_Total__c) totalprice
         FROM TSGADX__Deal__c
         WHERE
           (OwnerId = :strSelectedRep
@@ -2997,11 +3117,501 @@ public class SalesReviewReportController {
       ]
     );
 
-    SummaryModel currentSummaryRep1 = getSummaryRepZbo(lstData, false);
-    SummaryModel currentSummaryZbo1 = getSummaryRepZbo(lstData, true);
-    avgSummaryModel monthlySummaryRep1 = getAvgSummaryRepZbo(lstData, false);
-    avgSummaryModel monthlySummaryZbo1 = getAvgSummaryRepZbo(lstData, true);
+    //added on 22-03-2020
+    SummaryModel currentSummaryRep1 = getSummaryRepZbo(lstData, false, '');
+    SummaryModel currentSummaryZbo1 = getSummaryRepZbo(lstData, true, '');
+    avgSummaryModel monthlySummaryRep1 = getAvgSummaryRepZbo(
+      lstData,
+      false,
+      ''
+    );
+    avgSummaryModel monthlySummaryZbo1 = getAvgSummaryRepZbo(lstData, true, '');
 
-    return null;
+    Set<Id> setuserids = new Set<Id>();
+    if (UserIds != null && UserIds.size() > 0) {
+      setuserids.addAll(UserIds);
+    }
+    setuserids.add((Id) strSelectedRep);
+    totalSaleReadOnly(
+      currentSummaryRep1,
+      monthlySummaryRep1,
+      currentSummaryZbo1,
+      monthlySummaryZbo1,
+      setuserids
+    );
+
+    //MPF RT data
+    //lstSalesQuotaDetailMFPReadOnly
+    currentSummaryRep1 = getSummaryRepZbo(lstData, false, 'Equipment_Deals');
+    currentSummaryZbo1 = getSummaryRepZbo(lstData, true, 'Equipment_Deals');
+    monthlySummaryRep1 = getAvgSummaryRepZbo(lstData, false, 'Equipment_Deals');
+    monthlySummaryZbo1 = getAvgSummaryRepZbo(lstData, true, 'Equipment_Deals');
+    lstSalesQuotaDetailMFPReadOnly = new List<clsReadOnlySales>();
+    lstSalesQuotaDetailMFPReadOnly = totalSaleByCategory(
+      currentSummaryRep1,
+      monthlySummaryRep1,
+      currentSummaryZbo1,
+      monthlySummaryZbo1,
+      setuserids
+    );
+    system.debug(
+      '@@@@lstSalesQuotaDetailMPSReadOnly@@@ ' +
+      lstSalesQuotaDetailMFPReadOnly.size()
+    );
+
+    //MPS RT data
+    system.debug('@@@@lstData' + lstData);
+
+    currentSummaryRep1 = getSummaryRepZbo(lstData, false, 'MPS_Deals');
+    currentSummaryZbo1 = getSummaryRepZbo(lstData, true, 'MPS_Deals');
+    monthlySummaryRep1 = getAvgSummaryRepZbo(lstData, false, 'MPS_Deals');
+    monthlySummaryZbo1 = getAvgSummaryRepZbo(lstData, true, 'MPS_Deals');
+    lstSalesQuotaDetailMPSReadOnly = new List<clsReadOnlySales>();
+    lstSalesQuotaDetailMPSReadOnly = totalSaleByCategory(
+      currentSummaryRep1,
+      monthlySummaryRep1,
+      currentSummaryZbo1,
+      monthlySummaryZbo1,
+      setuserids
+    );
+    system.debug(
+      '@@@@lstSalesQuotaDetailMPSReadOnly@@@ ' +
+      lstSalesQuotaDetailMPSReadOnly.size()
+    );
+
+    //Production RT data
+    currentSummaryRep1 = getSummaryRepZbo(lstData, false, 'Production_Deals');
+    currentSummaryZbo1 = getSummaryRepZbo(lstData, true, 'Production_Deals');
+    monthlySummaryRep1 = getAvgSummaryRepZbo(
+      lstData,
+      false,
+      'Production_Deals'
+    );
+    monthlySummaryZbo1 = getAvgSummaryRepZbo(lstData, true, 'Production_Deals');
+    lstSalesQuotaDetailProductionReadOnly = new List<clsReadOnlySales>();
+    lstSalesQuotaDetailProductionReadOnly = totalSaleByCategory(
+      currentSummaryRep1,
+      monthlySummaryRep1,
+      currentSummaryZbo1,
+      monthlySummaryZbo1,
+      setuserids
+    );
+
+    //Software RT data
+    currentSummaryRep1 = getSummaryRepZbo(lstData, false, 'IT_Services');
+    currentSummaryZbo1 = getSummaryRepZbo(lstData, true, 'IT_Services');
+    monthlySummaryRep1 = getAvgSummaryRepZbo(lstData, false, 'IT_Services');
+    monthlySummaryZbo1 = getAvgSummaryRepZbo(lstData, true, 'IT_Services');
+    lstSalesQuotaDetailSoftwareReadOnly = new List<clsReadOnlySales>();
+    lstSalesQuotaDetailSoftwareReadOnly = totalSaleByCategory(
+      currentSummaryRep1,
+      monthlySummaryRep1,
+      currentSummaryZbo1,
+      monthlySummaryZbo1,
+      setuserids
+    );
+  }
+
+  public class clsReadOnlySales {
+    public string field1 { get; set; }
+    public string field2 { get; set; }
+    public string field3 { get; set; }
+    public string field4 { get; set; }
+    public string field5 { get; set; }
+    public string field6 { get; set; }
+    public string field7 { get; set; }
+    public string field8 { get; set; }
+    public string field9 { get; set; }
+    public string field10 { get; set; }
+
+    public clsReadOnlySales() {
+      field1 = '';
+      field2 = '';
+      field3 = '';
+      field4 = '';
+      field5 = '';
+      field6 = '';
+      field7 = '';
+      field8 = '';
+      field9 = '';
+      field10 = '';
+    }
+  }
+
+  private void totalSaleReadOnly(
+    SummaryModel customer,
+    avgSummaryModel customermonthly,
+    SummaryModel zbo,
+    avgSummaryModel zbomonthly,
+    Set<Id> setuserids
+  ) {
+    Map<Integer, List<String>> mapcolumns = new Map<Integer, List<String>>();
+    mapcolumns.put(
+      0,
+      new List<String>{
+        'Annual Avg Client Deals / Rep',
+        'Customer Win/Loss',
+        'Customer Monthly Win/Loss',
+        'ZBO Win/Loss',
+        'ZBO Monthly Win/Loss'
+      }
+    );
+    mapcolumns.put(
+      1,
+      new List<String>{
+        'Annual Avg Prospect Deals/Rep',
+        'YTD Win %',
+        'Avg Monthly Win %',
+        'YTD Win %',
+        'Avg Monthly Win %'
+      }
+    );
+    mapcolumns.put(
+      2,
+      new List<String>{
+        'Annual Avg Total Deals/Rep',
+        'YTD Won',
+        'Avg Monthly Won',
+        'YTD Won',
+        'Avg Monthly Won'
+      }
+    );
+    mapcolumns.put(
+      3,
+      new List<String>{
+        'Monthly Avg Client Deals / Rep',
+        'YTD Pushed',
+        'Avg Monthly Pushed',
+        'YTD Pushed',
+        'Avg Monthly Pushed'
+      }
+    );
+    mapcolumns.put(
+      4,
+      new List<String>{
+        'Monthly Avg Prospect Deals/Rep',
+        'YTD Lost to Competition',
+        'Avg Monthly Lost to Competition',
+        'YTD Lost to Competition',
+        'Avg Monthly Lost to Competition'
+      }
+    );
+    mapcolumns.put(
+      5,
+      new List<String>{
+        'Monthly Avg Total Deals/Rep',
+        'YTD Deals Worked',
+        'Avg Monthly Deals Worked',
+        'YTD Deals Worked',
+        'Avg Monthly Deals Worked'
+      }
+    );
+    mapcolumns.put(
+      6,
+      new List<String>{
+        'Average Deal Size',
+        'Total Deals Worked',
+        'Total Avg Monthly Deals',
+        '',
+        ''
+      }
+    );
+
+    Map<string, Object> mapcustomer = classtomapkeyvalue(customer);
+    Map<string, Object> mapcustomermonth = classtomapkeyvalue(customermonthly);
+    Map<string, Object> mapzbo = classtomapkeyvalue(zbo);
+    Map<string, Object> mapzbomonth = classtomapkeyvalue(zbomonthly);
+    Integer totalUsers = setuserids.size();
+
+    lstSalesQuotaDetailReadOnly = new List<clsReadOnlySales>();
+    Integer intK = 0;
+    for (Integer key : mapcolumns.keySet()) {
+      clsReadOnlySales objcls = new clsReadOnlySales();
+      Map<string, Object> mapobjcls = classtomapkeyvalue(
+        Json.serialize(objcls)
+      );
+      Integer intJ = 1;
+      for (String objstr : mapcolumns.get(key)) {
+        mapobjcls.put('field' + intJ, (Object) objstr);
+        if (intJ == 1) {
+          if (intK == 0) {
+            mapobjcls.put(
+              'field2',
+              (Decimal) mapcustomer.get('totalCount') / totalUsers
+            );
+          } else if (intK == 1) {
+            mapobjcls.put(
+              'field2',
+              (Decimal) mapzbo.get('totalCount') / totalUsers
+            );
+          } else if (intK == 2) {
+            mapobjcls.put(
+              'field2',
+              ((Decimal) mapcustomer.get('totalCount') +
+              (Decimal) mapzbo.get('totalCount')) / totalUsers
+            );
+          } else if (intK == 3) {
+            mapobjcls.put(
+              'field2',
+              (((Decimal) mapcustomer.get('totalCount') / totalUsers) / 12)
+                .setScale(2)
+            );
+          } else if (intK == 4) {
+            mapobjcls.put(
+              'field2',
+              (((Decimal) mapzbomonth.get('totalCount')) / 12).setScale(2)
+            );
+          } else if (intK == 5) {
+            mapobjcls.put(
+              'field2',
+              ((((Decimal) mapcustomer.get('totalCount') +
+                (Decimal) mapzbo.get('totalCount')) / totalUsers) / 12)
+                .setScale(2)
+            );
+          } else if (intK == 6) {
+            // total deal amount
+            decimal totaldeals = (((Decimal) mapcustomer.get('totalCount') +
+            (Decimal) mapzbo.get('totalCount')));
+            if (totaldeals > 0) {
+              mapobjcls.put(
+                'field2',
+                '$' +
+                ((Decimal) mapcustomer.get('avgdealprice') / totaldeals)
+                  .setScale(2)
+              );
+            }
+          }
+        }
+
+        string strkeyval = '';
+        if (intK == 1) {
+          strkeyval = 'winPercent';
+          mapobjcls.put('field4', mapcustomer.get(strkeyval) + '%');
+          mapobjcls.put('field6', mapcustomermonth.get(strkeyval) + '%');
+          mapobjcls.put('field8', mapzbo.get(strkeyval) + '%');
+          mapobjcls.put('field10', mapzbomonth.get(strkeyval) + '%');
+        } else if (intK == 2) {
+          strkeyval = 'totalWon';
+        } else if (intK == 3) {
+          strkeyval = 'totalLost';
+        } else if (intK == 4) {
+          strkeyval = 'totalLostToComp';
+        } else if (intK == 5) {
+          strkeyval = 'totalCount';
+        } else if (intK == 6) {
+          strkeyval = 'Last';
+        }
+        if (String.isnotblank(strkeyval) && strkeyval != 'Last' && intK != 1) {
+          mapobjcls.put('field4', mapcustomer.get(strkeyval));
+          mapobjcls.put('field6', mapcustomermonth.get(strkeyval));
+          mapobjcls.put('field8', mapzbo.get(strkeyval));
+          mapobjcls.put('field10', mapzbomonth.get(strkeyval));
+        } else if (String.isnotblank(strkeyval) && strkeyval == 'Last') {
+          mapobjcls.put(
+            'field4',
+            ((Decimal) mapcustomer.get('totalCount') +
+            (Decimal) mapzbo.get('totalCount'))
+          );
+          mapobjcls.put(
+            'field6',
+            ((Decimal) mapcustomermonth.get('totalCount') +
+            (Decimal) mapzbomonth.get('totalCount'))
+          );
+        }
+
+        intJ = intJ + 2;
+      }
+      intK++;
+      objcls = (clsReadOnlySales) System.JSON.deserialize(
+        JSON.serialize(mapobjcls),
+        clsReadOnlySales.class
+      );
+
+      lstSalesQuotaDetailReadOnly.add(objcls);
+    }
+  }
+
+  private List<clsReadOnlySales> totalSaleByCategory(
+    SummaryModel customer,
+    avgSummaryModel customermonthly,
+    SummaryModel zbo,
+    avgSummaryModel zbomonthly,
+    Set<Id> setuserids
+  ) {
+    Map<Integer, List<String>> mapcolumns = new Map<Integer, List<String>>();
+    mapcolumns.put(
+      0,
+      new List<String>{
+        'Annual Avg Client Deals / Rep',
+        'Customer Win/Loss',
+        'Customer Monthly Win/Loss',
+        'ZBO Win/Loss',
+        'ZBO Monthly Win/Loss'
+      }
+    );
+    mapcolumns.put(
+      1,
+      new List<String>{
+        'Annual Avg Prospect Deals/Rep',
+        'YTD Win %',
+        'Avg Monthly Win %',
+        'YTD Win %',
+        'Avg Monthly Win %'
+      }
+    );
+    mapcolumns.put(
+      2,
+      new List<String>{
+        'Annual Avg Total Deals/Rep',
+        'YTD Won',
+        'Avg Monthly Won',
+        'YTD Won',
+        'Avg Monthly Won'
+      }
+    );
+
+    mapcolumns.put(
+      3,
+      new List<String>{
+        'Average Deal Size',
+        'YTD Deals Worked',
+        'Avg Monthly Deals Worked',
+        'YTD Deals Worked',
+        'Avg Monthly Deals Worked'
+      }
+    );
+    mapcolumns.put(
+      4,
+      new List<String>{
+        '',
+        'Total Deals Worked',
+        'Total Avg Monthly Deals',
+        '',
+        ''
+      }
+    );
+
+    Map<string, Object> mapcustomer = classtomapkeyvalue(customer);
+    Map<string, Object> mapcustomermonth = classtomapkeyvalue(customermonthly);
+    Map<string, Object> mapzbo = classtomapkeyvalue(zbo);
+    Map<string, Object> mapzbomonth = classtomapkeyvalue(zbomonthly);
+    Integer totalUsers = setuserids.size();
+
+    List<clsReadOnlySales> lstreadonly = new List<clsReadOnlySales>();
+    Integer intK = 0;
+    for (Integer key : mapcolumns.keySet()) {
+      clsReadOnlySales objcls = new clsReadOnlySales();
+      Map<string, Object> mapobjcls = classtomapkeyvalue(
+        Json.serialize(objcls)
+      );
+      Integer intJ = 1;
+      for (String objstr : mapcolumns.get(key)) {
+        mapobjcls.put('field' + intJ, (Object) objstr);
+        if (intJ == 1) {
+          if (intK == 0) {
+            mapobjcls.put(
+              'field2',
+              (Decimal) mapcustomer.get('totalCount') / totalUsers
+            );
+          } else if (intK == 1) {
+            mapobjcls.put(
+              'field2',
+              (Decimal) mapzbo.get('totalCount') / totalUsers
+            );
+          } else if (intK == 2) {
+            mapobjcls.put(
+              'field2',
+              ((Decimal) mapcustomer.get('totalCount') +
+              (Decimal) mapzbo.get('totalCount')) / totalUsers
+            );
+          } else if (intK == 3) {
+            // total deal amount
+
+            decimal totaldeals = (((Decimal) mapcustomer.get('totalCount') +
+            (Decimal) mapzbo.get('totalCount')));
+            if (totaldeals > 0) {
+              mapobjcls.put(
+                'field2',
+                '$' +
+                ((Decimal) mapcustomer.get('avgdealprice') / totaldeals)
+                  .setScale(2)
+              );
+            }
+          }
+        }
+
+        string strkeyval = '';
+        if (intK == 1) {
+          strkeyval = 'winPercent';
+          mapobjcls.put('field4', mapcustomer.get(strkeyval) + '%');
+          mapobjcls.put('field6', mapcustomermonth.get(strkeyval) + '%');
+          mapobjcls.put('field8', mapzbo.get(strkeyval) + '%');
+          mapobjcls.put('field10', mapzbomonth.get(strkeyval) + '%');
+        } else if (intK == 2) {
+          strkeyval = 'totalWon';
+        } else if (intK == 3) {
+          strkeyval = 'totalCount';
+        } else if (intK == 4) {
+          strkeyval = 'Last';
+        }
+        if (String.isnotblank(strkeyval) && strkeyval != 'Last' && intK != 1) {
+          mapobjcls.put('field4', mapcustomer.get(strkeyval));
+          mapobjcls.put('field6', mapcustomermonth.get(strkeyval));
+          mapobjcls.put('field8', mapzbo.get(strkeyval));
+          mapobjcls.put('field10', mapzbomonth.get(strkeyval));
+        } else if (String.isnotblank(strkeyval) && strkeyval == 'Last') {
+          mapobjcls.put(
+            'field4',
+            ((Decimal) mapcustomer.get('totalCount') +
+            (Decimal) mapzbo.get('totalCount'))
+          );
+          mapobjcls.put(
+            'field6',
+            ((Decimal) mapcustomermonth.get('totalCount') +
+            (Decimal) mapzbomonth.get('totalCount'))
+          );
+          mapobjcls.put('field8', '');
+          mapobjcls.put('field10', '');
+        }
+
+        intJ = intJ + 2;
+      }
+      intK++;
+      objcls = (clsReadOnlySales) System.JSON.deserialize(
+        JSON.serialize(mapobjcls),
+        clsReadOnlySales.class
+      );
+      system.debug('JSON##### ' + JSON.serialize(objcls));
+
+      lstreadonly.add(objcls);
+    }
+    system.debug('lst##### ' + lstreadonly);
+    return lstreadonly;
+  }
+
+  public Map<String, Object> classtomapkeyvalue(SummaryModel sm) {
+    String json_instance = Json.serialize(sm);
+    Map<String, Object> untyped_instance;
+    untyped_instance = (Map<String, Object>) JSON.deserializeUntyped(
+      json_instance
+    );
+    return untyped_instance;
+  }
+
+  public Map<String, Object> classtomapkeyvalue(avgSummaryModel sm) {
+    String json_instance = Json.serialize(sm);
+    Map<String, Object> untyped_instance;
+    untyped_instance = (Map<String, Object>) JSON.deserializeUntyped(
+      json_instance
+    );
+    return untyped_instance;
+  }
+
+  public Map<String, Object> classtomapkeyvalue(String json_instance) {
+    Map<String, Object> untyped_instance;
+    untyped_instance = (Map<String, Object>) JSON.deserializeUntyped(
+      json_instance
+    );
+    return untyped_instance;
   }
 }
